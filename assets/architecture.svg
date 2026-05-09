@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420">
+  <defs>
+    <linearGradient id="boxGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#21262d"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#8b949e"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2da44e"/>
+    </marker>
+  </defs>
+  <rect width="880" height="420" fill="#0d1117" rx="12"/>
+
+  <!-- Title -->
+  <text x="440" y="32" fill="#c9d1d9" font-family="Segoe UI,PingFang SC,sans-serif" font-size="18" font-weight="700" text-anchor="middle">Mastermind 6-Hook 生命周期架构</text>
+
+  <!-- Phase labels -->
+  <g font-family="Segoe UI,PingFang SC,sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+    <text x="140" y="64" fill="#58a6ff">SESSION START</text>
+    <text x="340" y="64" fill="#d29922">PRE-TOOL</text>
+    <text x="540" y="64" fill="#3fb950">TOOL EXECUTE</text>
+    <text x="740" y="64" fill="#a371f7">POST-TOOL</text>
+  </g>
+
+  <!-- Boxes -->
+  <g filter="url(#shadow)">
+    <!-- Hook 1 -->
+    <rect x="50" y="85" width="180" height="80" rx="8" fill="url(#boxGrad)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="140" y="110" fill="#58a6ff" font-family="Segoe UI,PingFang SC,sans-serif" font-size="13" font-weight="700" text-anchor="middle">Hook 1 · 上下文注入器</text>
+    <text x="140" y="132" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">加载 ledger + worklog</text>
+    <text x="140" y="148" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">注入会话上下文</text>
+
+    <!-- Hook 2 -->
+    <rect x="250" y="85" width="180" height="80" rx="8" fill="url(#boxGrad)" stroke="#d29922" stroke-width="1.5"/>
+    <text x="340" y="110" fill="#d29922" font-family="Segoe UI,PingFang SC,sans-serif" font-size="13" font-weight="700" text-anchor="middle">Hook 2 · 协调器守护</text>
+    <text x="340" y="132" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">速率限制 + 委派检查</text>
+    <text x="340" y="148" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">SOFT WARN</text>
+
+    <!-- Hook 3 -->
+    <rect x="250" y="195" width="180" height="80" rx="8" fill="url(#boxGrad)" stroke="#f85149" stroke-width="1.5"/>
+    <text x="340" y="220" fill="#f85149" font-family="Segoe UI,PingFang SC,sans-serif" font-size="13" font-weight="700" text-anchor="middle">Hook 3 · 分级审核门</text>
+    <text x="340" y="242" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">4 阶段验证 + 置信度阈值</text>
+    <text x="340" y="258" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">HARD GATE</text>
+
+    <!-- Tool -->
+    <rect x="450" y="85" width="180" height="80" rx="8" fill="url(#boxGrad)" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="540" y="110" fill="#3fb950" font-family="Segoe UI,PingFang SC,sans-serif" font-size="13" font-weight="700" text-anchor="middle">工具执行层</text>
+    <text x="540" y="132" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">nuclei / sqlmap / ffuf</text>
+    <text x="540" y="148" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">Caido / 自定义 Agent</text>
+
+    <!-- Hook 4 -->
+    <rect x="650" y="85" width="180" height="80" rx="8" fill="url(#boxGrad)" stroke="#a371f7" stroke-width="1.5"/>
+    <text x="740" y="110" fill="#a371f7" font-family="Segoe UI,PingFang SC,sans-serif" font-size="13" font-weight="700" text-anchor="middle">Hook 4 · 工作日志记录器</text>
+    <text x="740" y="132" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">JSONL + Obsidian 双写</text>
+    <text x="740" y="148" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">取证级审计追踪</text>
+
+    <!-- Hook 5 -->
+    <rect x="650" y="195" width="180" height="80" rx="8" fill="url(#boxGrad)" stroke="#a371f7" stroke-width="1.5"/>
+    <text x="740" y="220" fill="#a371f7" font-family="Segoe UI,PingFang SC,sans-serif" font-size="13" font-weight="700" text-anchor="middle">Hook 5 · 重试检测器</text>
+    <text x="740" y="242" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">6 类过早投降模式匹配</text>
+    <text x="740" y="258" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">自动注入绕过策略</text>
+
+    <!-- Hook 6 -->
+    <rect x="340" y="310" width="200" height="70" rx="8" fill="url(#boxGrad)" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="440" y="335" fill="#58a6ff" font-family="Segoe UI,PingFang SC,sans-serif" font-size="13" font-weight="700" text-anchor="middle">Hook 6 · 交接保存器</text>
+    <text x="440" y="355" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">序列化完整状态 → Obsidian Handoff</text>
+
+    <!-- Knowledge Base -->
+    <rect x="50" y="195" width="180" height="80" rx="8" fill="url(#boxGrad)" stroke="#8b949e" stroke-width="1" stroke-dasharray="6,3"/>
+    <text x="140" y="220" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="12" font-weight="600" text-anchor="middle">📚 References 知识库</text>
+    <text x="140" y="240" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">Methodology · Bug Classes</text>
+    <text x="140" y="255" fill="#8b949e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10" text-anchor="middle">Bypass · Report Templates</text>
+  </g>
+
+  <!-- Arrows -->
+  <g stroke="#8b949e" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <line x1="230" y1="125" x2="250" y2="125"/>
+    <line x1="430" y1="125" x2="450" y2="125"/>
+    <line x1="630" y1="125" x2="650" y2="125"/>
+  </g>
+  <g stroke="#f85149" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <line x1="340" y1="165" x2="340" y2="195"/>
+  </g>
+  <g stroke="#a371f7" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <line x1="540" y1="165" x2="540" y2="235"/>
+    <line x1="650" y1="235" x2="630" y2="235"/>
+  </g>
+  <g stroke="#58a6ff" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <line x1="440" y1="310" x2="440" y2="275"/>
+  </g>
+  <g stroke="#8b949e" stroke-width="1" stroke-dasharray="5,4" fill="none">
+    <line x1="140" y1="165" x2="140" y2="195"/>
+  </g>
+
+  <!-- Feedback loop -->
+  <path d="M 830 235 Q 860 235 860 125 Q 860 40 440 40 Q 40 40 40 125 Q 40 210 50 210" stroke="#2da44e" stroke-width="1.5" fill="none" marker-end="url(#arrowGreen)" stroke-dasharray="6,4"/>
+  <text x="60" y="32" fill="#2da44e" font-family="Segoe UI,PingFang SC,sans-serif" font-size="10">状态反馈闭环</text>
+</svg>

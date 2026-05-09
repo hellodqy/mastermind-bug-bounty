@@ -22,38 +22,79 @@ This project ports the 6 Claude Code hooks from [trace37 labs](https://labs.trac
 
 The skill implements a **6-hook lifecycle** that gates every phase of a bug bounty session:
 
-```
-SESSION START          PRE-TOOL              TOOL              POST-TOOL
--------------          --------              ----              ---------
+<p align="center">
+  <img src="assets/architecture.svg" alt="Mastermind 6-Hook Lifecycle Architecture" width="90%"/>
+</p>
 
-[Context Injector]  →  [Coordinator Guard]  →  [nuclei/sqlmap]  →  [Worklog Recorder]
-Load ledger +             Soft warn on >3          Execute              Log result + 
-recent worklog            requests to same         tool                 timestamp
-into session              host or skill
-context                   file without 
-                          delegation
-                               |
-                          [Triage Gate]
-                          Hard block if
-                          confidence < 0.7
-                          or no impact proof
-                               |
-                               ▼
-                       [POST-TOOL cont.]
-                       [Retry Detector]
-                       Pattern-match agent
-                       conclusions for
-                       "WAF detected" etc.
-                       Inject bypass if needed
-                               |
-                               ▼
-                    ┌──────────────────────┐
-                    │    HANDOFF SAVER     │
-                    │  On session end:     │
-                    │  Serialize targets + │
-                    │  findings + agents   │
-                    │  to Obsidian vault   │
-                    └──────────────────────┘
+<p align="center">
+  <img src="assets/coverage-radar.svg" alt="Mastermind Vulnerability Coverage Radar" width="85%"/>
+</p>
+
+### Architecture Sequence
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Session as Hook 1<br/>Context Injector
+    participant Guard as Hook 2<br/>Coordinator Guard
+    participant Triage as Hook 3<br/>Triage Gate
+    participant Tool as Tool Layer
+    participant Log as Hook 4<br/>Worklog Recorder
+    participant Retry as Hook 5<br/>Retry Detector
+    participant Handoff as Hook 6<br/>Handoff Saver
+
+    User->>Session: Start / Resume Session
+    Session->>Session: Load ledger + worklog
+    Session-->>User: Inject context summary
+
+    loop Every Tool Call
+        User->>Guard: Prepare tool execution
+        Guard->>Guard: Rate check + delegation check
+        alt Pass Guard
+            Guard->>Triage: If reporting finding
+            Triage->>Triage: 4-stage validation + confidence check
+            alt Triage Approved
+                Triage-->>User: Approve → Trigger POC chain
+            else Rejected
+                Triage-->>User: Reject → Require deeper exploitation
+            end
+            Guard->>Tool: Execute tool
+            Tool-->>Log: Return results
+            Log->>Log: Dual-write JSONL + Obsidian
+            Log->>Retry: Agent conclusion
+            Retry->>Retry: Pattern-match premature surrender
+            alt Surrender Detected
+                Retry-->>User: Inject bypass strategy → Retry
+            else Normal
+                Retry-->>User: Pass through
+            end
+        else Guard Alert
+            Guard-->>User: SOFT WARN / HARD ALERT
+        end
+    end
+
+    User->>Handoff: End session
+    Handoff->>Handoff: Serialize targets + findings + agents
+    Handoff-->>User: Generate handoff.md
+```
+
+### Triage Gate Decision Flow
+
+```mermaid
+flowchart TD
+    A[Finding Detected] --> B{Stage 1<br/>Automated Validation}
+    B -->|FAIL| C[Discard or Re-scan]
+    B -->|PASS| D{Stage 2<br/>Manual Verification}
+    D -->|FAIL| E[Log False Positive]
+    D -->|PASS| F{Stage 3<br/>Impact Assessment}
+    F -->|FAIL| G[Downgrade or Discard]
+    F -->|PASS| H{Stage 4<br/>Confidence ≥ 80%}
+    H -->|FAIL| I[Return to Stage 2]
+    H -->|PASS| J[✅ Triage Approved]
+    J --> K[POC Generation]
+    K --> L[Manual Proof Capture]
+    L --> M[H1 Report Draft]
+    M --> N[Caido Recording]
 ```
 
 ### The 6 Hooks

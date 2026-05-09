@@ -21,36 +21,79 @@
 
 本技能系统实现了覆盖漏洞赏金全生命周期的 **6-Hook 架构**：
 
-```
-SESSION START          PRE-TOOL              TOOL              POST-TOOL
--------------          --------              ----              ---------
+<p align="center">
+  <img src="assets/architecture.svg" alt="Mastermind 6-Hook 生命周期架构" width="90%"/>
+</p>
 
-[上下文注入器]   →   [协调器守护]   →   [nuclei/sqlmap]  →   [工作日志记录器]
-加载 ledger +         对同一主机的            执行                  记录结果 +
-最近工作日志           >3 次请求发出          工具                  时间戳
-注入会话               软警告或技能
-上下文                 文件越权读取
-                            |
-                       [分级审核门]
-                       置信度 < 0.7
-                       或无影响证明时
-                       执行硬拦截
-                            |
-                            ▼
-                    [POST-TOOL 续]
-                    [重试检测器]
-                    对 "WAF 拦截" 等
-                    结论进行模式匹配
-                    按需注入绕过策略
-                            |
-                            ▼
-                    ┌──────────────────────┐
-                    │      交接保存器       │
-                    │  会话结束时：         │
-                    │  序列化目标 + 发现 +  │
-                    │  代理状态到 Obsidian  │
-                    │  知识库              │
-                    └──────────────────────┘
+<p align="center">
+  <img src="assets/coverage-radar.svg" alt="Mastermind 漏洞覆盖雷达" width="85%"/>
+</p>
+
+### 架构时序图
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Session as Hook 1<br/>上下文注入器
+    participant Guard as Hook 2<br/>协调器守护
+    participant Triage as Hook 3<br/>分级审核门
+    participant Tool as 工具执行层
+    participant Log as Hook 4<br/>工作日志记录器
+    participant Retry as Hook 5<br/>重试检测器
+    participant Handoff as Hook 6<br/>交接保存器
+
+    User->>Session: 启动/恢复会话
+    Session->>Session: 加载 ledger + worklog
+    Session-->>User: 注入上下文摘要
+
+    loop 每次工具调用
+        User->>Guard: 准备执行工具
+        Guard->>Guard: 速率检查 + 委派检查
+        alt 通过守护检查
+            Guard->>Triage: 如提交发现
+            Triage->>Triage: 4阶段验证 + 置信度检查
+            alt 通过分级审核
+                Triage-->>User: 批准 → 触发 POC 链
+            else 未通过
+                Triage-->>User: 拒绝 → 要求深入利用
+            end
+            Guard->>Tool: 执行工具
+            Tool-->>Log: 返回结果
+            Log->>Log: 双写 JSONL + Obsidian
+            Log->>Retry: 代理结论
+            Retry->>Retry: 模式匹配过早投降
+            alt 检测到投降
+                Retry-->>User: 注入绕过策略 → 重试
+            else 正常
+                Retry-->>User: 通过
+            end
+        else 守护警告
+            Guard-->>User: SOFT WARN / HARD ALERT
+        end
+    end
+
+    User->>Handoff: 结束会话
+    Handoff->>Handoff: 序列化目标 + 发现 + 代理状态
+    Handoff-->>User: 生成 handoff.md
+```
+
+### 分级审核决策树
+
+```mermaid
+flowchart TD
+    A[发现漏洞] --> B{Stage 1<br/>自动化验证}
+    B -->|FAIL| C[丢弃或重扫]
+    B -->|PASS| D{Stage 2<br/>人工验证}
+    D -->|FAIL| E[记录误报]
+    D -->|PASS| F{Stage 3<br/>影响评估}
+    F -->|FAIL| G[降级或丢弃]
+    F -->|PASS| H{Stage 4<br/>置信度 ≥ 80%}
+    H -->|FAIL| I[返回 Stage 2]
+    H -->|PASS| J[✅ 审核通过]
+    J --> K[PoC 生成]
+    K --> L[手动证据捕获]
+    L --> M[H1 报告草稿]
+    M --> N[Caido 录制]
 ```
 
 ### 六大 Hook 一览
