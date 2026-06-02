@@ -112,6 +112,75 @@ def check_impact_demonstrated(finding: dict) -> bool:
     return False
 
 
+def _data_not_public(finding: dict) -> bool:
+    """Check 6 (v3.1 FUSED): data found in API must NOT be already visible
+    on the frontend UI. If API returns data already publicly displayed, it
+    is NOT a vulnerability (normal business function).
+
+    Returns True if data is confirmed NOT public (potential vuln).
+    """
+    if finding.get("data_visible_in_ui") is True:
+        return False
+    if finding.get("data_visible_in_ui") is False:
+        return True
+    non_public_fields = finding.get("non_public_fields")
+    if isinstance(non_public_fields, list) and len(non_public_fields) > 0:
+        return True
+    return True  # pass if no UI comparison done (recommended but not blocking)
+
+
+# ---------------------------------------------------------------------------
+# FOUND ≠ CONFIRMED Classification (v3.1 FUSED)
+# ---------------------------------------------------------------------------
+
+CONFIRMED = "CONFIRMED"
+PENDING = "PENDING"
+INFO = "INFO"
+
+
+def classify_finding(finding: dict) -> str:
+    """Classify a finding as CONFIRMED, PENDING, or INFO.
+
+    CONFIRMED: Impact demonstrated — can read unauthorized data,
+               execute unauthorized operations, or actively exploit keys.
+    PENDING:   Anomaly detected but cannot prove actual harm.
+    INFO:      Discovered but no exploitable path (version disclosure,
+               missing headers alone, static listing, etc.).
+    """
+    confirm_status = str(finding.get("confirmation_status", "")).upper()
+    if confirm_status in {CONFIRMED, PENDING, INFO}:
+        return confirm_status
+
+    has_impact = check_impact_demonstrated(finding)
+    has_evidence = _has_detection_evidence(finding)
+    has_target = _has_target(finding)
+    has_vuln_class = _has_vuln_class(finding)
+
+    # INFO: no real evidence or no exploitable path
+    if not has_target and not has_vuln_class:
+        return INFO
+    info_tags = finding.get("tags", [])
+    if isinstance(info_tags, list):
+        info_only = {"version_disclosure", "missing_headers",
+                     "static_listing", "informational_only",
+                     "no_exploitation_path"}
+        if any(t in info_only for t in info_tags):
+            return INFO
+
+    # PENDING: evidence exists but impact not demonstrated
+    if has_evidence and has_target and not has_impact:
+        return PENDING
+
+    # CONFIRMED: impact demonstrated
+    if has_impact and has_target:
+        return CONFIRMED
+
+    if has_evidence:
+        return PENDING
+
+    return INFO
+
+
 # ---------------------------------------------------------------------------
 # Validation orchestrator
 # ---------------------------------------------------------------------------
@@ -125,6 +194,7 @@ def validate_finding(finding: dict) -> dict:
         3. Has detection evidence
         4. **Has impact demonstrated** (hard gate)
         5. Confidence score >= threshold (default 0.7)
+        6. Data is NOT already public on UI (v3.1 FUSED)
 
     Args:
         finding: Raw finding dict from a specialist agent.
@@ -140,9 +210,11 @@ def validate_finding(finding: dict) -> dict:
                     "has_detection_evidence": bool,
                     "impact_demonstrated": bool,
                     "confidence_passed": bool,
+                    "data_not_public": bool,
                 },
                 "confidence": float,
                 "threshold": float,
+                "classification": str,  # CONFIRMED / PENDING / INFO
                 "reasons": list[str],
             }
     """
@@ -157,6 +229,7 @@ def validate_finding(finding: dict) -> dict:
         "has_detection_evidence": _has_detection_evidence(finding),
         "impact_demonstrated": check_impact_demonstrated(finding),
         "confidence_passed": confidence >= threshold,
+        "data_not_public": _data_not_public(finding),
     }
 
     reasons: list[str] = []
@@ -176,14 +249,22 @@ def validate_finding(finding: dict) -> dict:
         reasons.append(
             f"Confidence score {confidence:.2f} below threshold {threshold:.2f}."
         )
+    if not checks["data_not_public"]:
+        reasons.append(
+            "DATA VISIBLE IN UI — the data returned by this API is already "
+            "publicly displayed on the frontend. This is normal business "
+            "behavior, not a vulnerability."
+        )
 
     valid: bool = all(checks.values())
+    classification: str = classify_finding(finding)
 
     return {
         "valid": valid,
         "checks": checks,
         "confidence": confidence,
         "threshold": threshold,
+        "classification": classification,
         "reasons": reasons,
     }
 
