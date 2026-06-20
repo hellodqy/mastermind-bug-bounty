@@ -228,6 +228,7 @@ done < all_js_urls.txt
       - 认证方式（Bearer / X-API-Key / Cookie / 无）
   □ 提取硬编码凭据（apiKey, secretKey, token, AKID, password）
   □ 提取 SPA hash 路由
+  □ 提取登录入口（login route / OAuth/SSO entry / form action / 302 Location）→ 写入 _login_links.json
   □ 提取请求拦截器逻辑（公共参数注入）
   □ 提取加密函数签名（CryptoJS/WebCrypto）
 
@@ -235,6 +236,7 @@ done < all_js_urls.txt
   downloaded/{domain}/_endpoint_params.json  ← ★最重要★
   downloaded/{domain}/_secrets_found.json
   downloaded/{domain}/_hash_routes.txt
+  downloaded/{domain}/_login_links.json      ← 凭证门请求账号时必须引用
   downloaded/{domain}/_analysis_summary.md
 ```
 
@@ -455,6 +457,7 @@ downloaded/{domain}/
 │   └── endpoints               端点→参数需求映射
 ├── _secrets_found.json         # 硬编码凭据/密钥
 ├── _hash_routes.txt            # SPA Hash 路由
+├── _login_links.json           # 登录入口清单（Credential Gate 必须引用）
 ├── _analysis_summary.md        # JS 分析总结
 ├── _leaked_values.json (init)  # 初始值池（JS 中提取的硬编码值）
 └── js/                         # 所有 JS 文件本地副本

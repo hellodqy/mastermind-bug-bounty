@@ -412,7 +412,6 @@ mindmap
       XSS
       SQLi
       SSRF
-      CORS
       AuthN/AuthZ
       Prototype Pollution
       XXE/XML

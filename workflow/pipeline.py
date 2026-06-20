@@ -60,7 +60,7 @@ PIPELINE: list[Phase] = [
     # ── Phase 5: EXPLOIT ──
     Phase(
         name="exploit", agent="exploit",
-        description="EXPLOIT: P0 CVE/JWT admin/IDOR value pool/SSRF/race condition → P1 SQLi/SSTI/RCE/upload → P2 XSS/CSRF/CORS → report generation",
+        description="EXPLOIT: P0 CVE/JWT admin/IDOR value pool/SSRF/race condition → P1 SQLi/SSTI/RCE/upload → P2 XSS/CSRF → report generation",
         skills=["vuln_classes", "race_condition", "websocket_test"],
         depends_on=["crypto_attack", "bypass"],
     ),

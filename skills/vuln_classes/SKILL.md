@@ -3,10 +3,10 @@ name: vuln-classes
 description: >
   Vulnerability class encyclopedia. Detection signals, exploitation
   techniques, and impact demonstration for XSS, SQLi, SSRF, IDOR,
-  SSTI, path traversal, file upload, XXE, CSRF, CORS, prototype
+  SSTI, path traversal, file upload, XXE, CSRF, prototype
   pollution, and business logic flaws.
 metadata:
-  tags: "xss,sqli,ssrf,idor,ssti,lfi,rce,xxe,csrf,cors"
+  tags: "xss,sqli,ssrf,idor,ssti,lfi,rce,xxe,csrf"
   category: "offensive-security"
 ---
 
@@ -208,9 +208,8 @@ Polyglot: valid image + PHP code
 
 ---
 
-## CSRF & CORS
+## CSRF
 
-**CORS Test**: `Access-Control-Allow-Origin` reflects Origin header
 **CSRF**: Create a malicious form that submits on visit
 
 ---

@@ -344,8 +344,8 @@ Priority order for auditing:
    → Find hidden/unexposed endpoints
 4. SQL/Mapper XML
    → Dynamic SQL concatenation → SQL injection
-5. Configuration (CORS, Swagger, logging)
-   → Allowed origins, exposed endpoints, debug config
+5. Configuration (Swagger, logging)
+   → Exposed endpoints, debug config
 ```
 
 ---

@@ -509,7 +509,6 @@ Complete autonomous bug bounty methodology covering:
 - **XSS** — Reflected/Stored/DOM/Blind, context analysis, DOMPurify bypass, 5-rotor mutation strategies
 - **SQL Injection** — Error/Boolean/Time/Union-based, NoSQL injection, ORM patterns, second-order detection
 - **SSRF** — Basic/Blind variants, cloud metadata extraction (AWS/GCP/Azure), protocol smuggling, DNS rebinding
-- **CORS** — 3-part exploitability test, preflight bypass techniques, null origin exploitation
 - **Authentication** — OAuth/OIDC/PKCE chain attacks, JWT attacks (alg:none, KID manipulation), MFA bypass vectors
 - **Authorization** — IDOR patterns, path traversal variants, mass assignment exploitation
 - **Prototype Pollution** — Detection across JavaScript/Node.js/Python, gadget chain construction, DOMPurify bypass

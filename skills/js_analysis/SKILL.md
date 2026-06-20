@@ -73,6 +73,7 @@ downloaded/{domain}/
 ├── _endpoint_params.json     # ★ 核心产出：接口→参数需求映射表
 ├── _secrets_found.json       # 硬编码凭据/密钥
 ├── _hash_routes.txt          # SPA Hash 路由清单
+├── _login_links.json         # 登录入口清单（请求测试账号时必须附链接）
 └── js/
     ├── static_js_app.js
     ├── static_js_chunk-vendors.js
@@ -409,6 +410,8 @@ const routes = [
 // /#/internal/status    → 无认证！(高危)
 ```
 
+同时将包含 `login`、`signin`、`sso`、`oauth`、`auth`、`register`、`callback` 的路由、表单 `action`、跳转 `Location` 和 OAuth/SSO 授权 URL 写入 `_login_links.json`。后续任何 Credential Gate 请求账号时，必须从该文件选择最匹配的登录链接。
+
 **SPA 路由价值判断：**
 ```
 优先级:
@@ -619,4 +622,3 @@ JS 中的 baseURL         →  api_fuzz agent:      确定 API 根路径
 ❌ 提取 3 个接口就停止（目标: 全量提取）
 ❌ JS 文件在线上，不下载到本地
 ```
-

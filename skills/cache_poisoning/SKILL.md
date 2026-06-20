@@ -98,19 +98,18 @@ Response (cached!):
   Your IP: <img src=x onerror=alert(1)>
 ```
 
-### Origin / Referer Reflection
+### Referer Reflection
 
 ```
 GET /api/jsonp?callback=steal HTTP/1.1
 Host: target.com
-Origin: https://evil.com
+Referer: https://evil.com/path
 
 Response:
-  Access-Control-Allow-Origin: https://evil.com
-  Access-Control-Allow-Credentials: true
+  reflected Referer-dependent content or redirect target
 ```
 
-Cached CORS headers allow evil.com to steal authenticated responses.
+Cached origin-dependent responses can expose the wrong variant to other users.
 
 ### User-Agent (Mobile/Desktop Switching)
 

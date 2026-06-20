@@ -977,7 +977,6 @@ Vulnerability
 │   ├── Open Redirect
 │   ├── Tabnabbing
 │   ├── Clickjacking
-│   ├── CORS Misconfiguration
 │   └── PostMessage Issues
 ├── Cryptographic
 │   ├── Weak Encryption

@@ -108,6 +108,14 @@ Auth: check for 'Authorization', 'X-API-Key', 'X-Auth-Token', 'Bearer', 'token' 
   - axios/fetch request interceptors (axios.interceptors.request.use)
   - The base axios.create({headers:{...}}) config
 
+=== STEP D2: EXTRACT LOGIN LINKS FOR CREDENTIAL GATE ===
+Find login/account entry points so any future request for test accounts includes the exact link:
+  - Routes or paths containing login, signin, sso, oauth, auth, register, callback
+  - HTML form action targets for login forms
+  - 302 Location values that point to login/SSO
+  - OAuth authorize URLs and SSO redirect URLs
+Record full URL when base_url is known; otherwise record path + source file.
+
 === STEP E: SAVE PER-FILE ANALYSIS ===
 Save to findings/_analysis_{filename}.json:
 {
@@ -131,6 +139,9 @@ Save to findings/_analysis_{filename}.json:
   ],
   "secrets": [
     {"type": "apiKey|jwt_secret|password|cloud_key", "key": "var_name", "value": "xxx"}
+  ],
+  "login_links": [
+    {"url": "/#/login", "type": "spa_route", "source": "app.js", "confidence": "high"}
   ],
   "interceptors": "summary of any axios/fetch interceptors found"
 }
@@ -164,6 +175,7 @@ total_js = len(glob.glob(hunt_dir + "/js/*.js"))
 
 all_endpoints = {}
 all_secrets = []
+login_links = []
 files_detail = {}
 analyzed_count = 0
 
@@ -196,6 +208,9 @@ for af in analysis_files:
                     if sf not in all_endpoints[url]["source_files"]:
                         all_endpoints[url]["source_files"].append(sf)
         all_secrets.extend(data.get("secrets", []))
+        for link in data.get("login_links", []):
+            if link not in login_links:
+                login_links.append(link)
 
 # Build v2.4 format with _meta + endpoints
 output = {
@@ -217,6 +232,7 @@ output = {
 
 os.makedirs(hunt_dir + "/findings", exist_ok=True)
 json.dump(output, open(hunt_dir + "/findings/_endpoint_params.json", "w"), indent=2, ensure_ascii=False)
+json.dump({"login_links": login_links}, open(hunt_dir + "/findings/_login_links.json", "w"), indent=2, ensure_ascii=False)
 
 # Run the actual gate check from shared/linkage.py
 from shared.linkage import check_js_analysis_completeness

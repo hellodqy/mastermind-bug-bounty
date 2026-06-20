@@ -507,7 +507,6 @@ previous_session_duration: 3h24m
 - **XSS** — 反射型/存储型/DOM 型/盲打，上下文分析，DOMPurify 绕过，5 轮变异策略
 - **SQL 注入** — 报错/布尔/时间/联合，NoSQL 注入，ORM 模式，二阶检测
 - **SSRF** — 基础/盲打变体，云元数据提取（AWS/GCP/Azure），协议走私，DNS 重绑定
-- **CORS** — 三部分可利用性测试，预检绕过技术，null origin 利用
 - **认证** — OAuth/OIDC/PKCE 链路攻击，JWT 攻击（alg:none、KID 操纵），MFA 绕过向量
 - **授权** — IDOR 模式，路径遍历变体，批量赋值利用
 - **原型污染** — 跨 JavaScript/Node.js/Python 检测，gadget 链构建，DOMPurify 绕过
