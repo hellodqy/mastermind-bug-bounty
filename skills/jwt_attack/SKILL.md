@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - JWT token、header/payload/signature、JS 关键字、泄露 secret、角色字段
-- 参考：`references/jwt-analysis.md`
+- 资源索引：`references/INDEX.md`；候选资源：`jwt-analysis.md`
 
 ## Constraints
 

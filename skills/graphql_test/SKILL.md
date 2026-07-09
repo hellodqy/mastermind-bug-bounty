@@ -15,7 +15,7 @@ metadata:
 ## Tools / Inputs
 
 - GraphQL endpoint、introspection、queries、fragments、tokens、schema hints
-- 参考：`references/api-testing-methodology.md`
+- 资源索引：`references/INDEX.md`；候选资源：`api-testing-methodology.md`
 
 ## Constraints
 

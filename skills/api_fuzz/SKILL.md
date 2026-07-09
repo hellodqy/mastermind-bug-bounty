@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - Endpoint signatures、auth hints、value pool、response diffs
-- 参考：`references/api-testing-methodology.md`、`references/api-fuzz-payloads.md`
+- 资源索引：`references/INDEX.md`；候选资源：`api-testing-methodology.md`、`api-fuzz-payloads.md`
 
 ## Constraints
 

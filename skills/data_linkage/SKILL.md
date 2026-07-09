@@ -18,7 +18,7 @@ metadata:
 - `_endpoint_params.json`
 - `_leaked_values.json`
 - Response mining、PairingEngine、method fallback
-- 参考：`references/response-chaining.md`、`references/discovery-amplification.md`
+- 资源索引：`references/INDEX.md`；候选资源：`response-chaining.md`、`discovery-amplification.md`
 
 ## Constraints
 

@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - Proxy/CDN/WAF headers、HTTP/1.1 support、keep-alive behavior、edge/backend hints
-- 参考：`references/bypass_techniques.md`
+- 资源索引：`references/INDEX.md`；候选资源：`bypass_techniques.md`
 
 ## Constraints
 

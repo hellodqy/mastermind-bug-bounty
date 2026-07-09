@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - JSON body、query parser、merge/clone/update functions、client state
-- 参考：`references/bug_classes.md`
+- 资源索引：`references/INDEX.md`；候选资源：`bug_classes.md`
 
 ## Constraints
 

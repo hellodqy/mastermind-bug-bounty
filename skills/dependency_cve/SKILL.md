@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - Headers、cookies、JS libraries、error pages、default paths、source leak versions
-- 参考：`references/cve-chains.md`、`references/fingerprint-mapping.md`
+- 资源索引：`references/INDEX.md`；候选资源：`cve-chains.md`、`fingerprint-mapping.md`
 
 ## Constraints
 

@@ -15,7 +15,7 @@ metadata:
 ## Tools / Inputs
 
 - CDN/cache headers、Host/X-Forwarded-*、query params、static/dynamic responses
-- 参考：`references/bypass_techniques.md`
+- 资源索引：`references/INDEX.md`；候选资源：`bypass_techniques.md`
 
 ## Constraints
 

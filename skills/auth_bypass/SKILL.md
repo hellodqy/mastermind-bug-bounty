@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - Blocked endpoint queue、tokens、headers、methods、routes、gateway hints
-- 参考：`references/403-bypass-complete.md`
+- 资源索引：`references/INDEX.md`；候选资源：`403-bypass-complete.md`
 
 ## Constraints
 

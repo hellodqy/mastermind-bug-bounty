@@ -11,6 +11,16 @@ metadata:
 
 # Mastermind Workflow — Four-Phase Orchestrator
 
+## Knowledge Loading
+
+Use progressive disclosure:
+
+1. **Metadata layer**: load only Skill names and one-line descriptions at startup.
+2. **Instruction layer**: after matching a Skill, load that Skill's goal, tools/inputs, constraints, and chain-first questions; keep this under 5000 tokens.
+3. **Resource layer**: load exploit details, payload libraries, and reference docs only through `references/INDEX.md`, and only when Phase 1/2 has selected a concrete direction.
+
+Do not preload all reference modules. The workflow should preserve AI attention for prioritization, chaining, and verifier-backed decisions.
+
 ## Pipeline
 
 ```

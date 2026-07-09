@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - WS/WSS URL、Socket.IO/STOMP hints、tokens、room/channel/user IDs
-- 参考：`references/decision-trees.md`
+- 资源索引：`references/INDEX.md`；候选资源：`decision-trees.md`
 
 ## Constraints
 

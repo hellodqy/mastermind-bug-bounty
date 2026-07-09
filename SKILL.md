@@ -41,7 +41,17 @@ Wrong Skill shape:
 - large payload dictionaries
 - premature "found one bug, write report" behavior
 
-Detailed payloads and attack catalogs belong in `references/`, loaded only when the AI chooses that direction.
+Detailed payloads and attack catalogs belong in the third resource layer under `references/`, not in active Skill instructions.
+
+## 0.2 Progressive Knowledge Disclosure
+
+Knowledge is loaded in three layers:
+
+1. **Metadata layer**: at startup, load only each Skill `name` and one-line `description`. This layer is the router and should cost only dozens of tokens per Skill.
+2. **Instruction layer**: after a Skill is matched, load only that Skill's goal, tools/inputs, constraints, and chain-first questions. Keep every instruction Skill under 5000 tokens.
+3. **Resource layer**: exploitation details, payload libraries, vulnerability notes, and reference documents live under `references/`. Load `references/INDEX.md` first, then open only the one or few resources needed for the chosen direction.
+
+Do not preload the full knowledge base into the prompt. More context is not more intelligence here; it dilutes attention and makes Phase 1/2 decisions worse.
 
 ## 1. Four Phases
 
@@ -167,10 +177,20 @@ Rules:
 
 ## Reference Loading
 
-Load references on demand based on Phase 1/2 attack surface choices:
+Default rule: never load `references/*.md` directly during startup or Skill matching.
 
-- JS/API: `skills/js_analysis/SKILL.md`, `skills/data_linkage/SKILL.md`
-- API fuzzing: `skills/api_fuzz/SKILL.md`, `references/api-testing-methodology.md`
-- JWT/crypto: `skills/jwt_attack/SKILL.md`, `skills/crypto_attack/SKILL.md`
-- Access control: `skills/auth_bypass/SKILL.md`, `references/403-bypass-complete.md`
-- Reporting: `agents/report/SKILL.md`, `references/report_templates.md`
+Use this sequence:
+
+1. Load metadata for all Skills.
+2. Load the matched Skill instruction file only.
+3. If the active hypothesis needs deeper knowledge, read `references/INDEX.md`.
+4. Choose the smallest relevant resource from the index.
+5. Stop loading old resource directions when the attack direction changes.
+
+Examples:
+
+- JS/API hypothesis: load `skills/js_analysis/SKILL.md` or `skills/data_linkage/SKILL.md`; consult `references/INDEX.md` before opening JS/API resource files.
+- API fuzzing hypothesis: load `skills/api_fuzz/SKILL.md`; open API methodology or payload resources only after a specific endpoint/parameter direction is chosen.
+- JWT/crypto hypothesis: load `skills/jwt_attack/SKILL.md` or `skills/crypto_attack/SKILL.md`; open crypto/JWT resources only for the selected token/signature question.
+- Access-control hypothesis: load `skills/auth_bypass/SKILL.md`; open bypass resources only after a concrete 401/403/role-boundary behavior is observed.
+- Reporting: load report resources only in Phase 3, and only for verified findings.

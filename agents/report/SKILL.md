@@ -18,7 +18,7 @@ metadata:
 
 - Approved findings only
 - HTTP 请求/响应原文、curl、截图、日志
-- 评级标准和报告模板：`references/rating-standard.md`、`references/report_templates.md`
+- 资源索引：`references/INDEX.md`；候选资源：`rating-standard.md`、`report_templates.md`
 
 ## Constraints
 

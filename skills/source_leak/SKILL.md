@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - GitHub/Gitee/search engine/cache、domain、company name、emails、repo metadata
-- 参考：`references/js-analysis-source-leak.md`
+- 资源索引：`references/INDEX.md`；候选资源：`js-analysis-source-leak.md`
 
 ## Constraints
 

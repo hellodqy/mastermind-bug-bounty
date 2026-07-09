@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - Endpoint signatures、parameters、responses、tokens、business actions
-- 参考：`references/bug_classes.md`、`references/decision-trees.md`
+- 资源索引：`references/INDEX.md`；候选资源：`bug_classes.md`、`decision-trees.md`
 
 ## Constraints
 

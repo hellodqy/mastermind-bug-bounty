@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - JS 加密函数、密文、签名字段、key/iv/secret、编码字段
-- 参考：`references/crypto-analysis.md`
+- 资源索引：`references/INDEX.md`；候选资源：`crypto-analysis.md`
 
 ## Constraints
 

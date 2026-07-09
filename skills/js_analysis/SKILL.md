@@ -17,7 +17,7 @@ metadata:
 
 - JS、sourcemap、HTML、Network 请求、SPA 路由、localStorage/sessionStorage
 - 输出：`_endpoint_params.json`、`_login_links.json`、`_secrets_found.json`
-- 参考：`references/js-analysis-vulnforge.md`、`references/vue-spa-attacks.md`
+- 资源索引：`references/INDEX.md`；候选资源：`js-analysis-vulnforge.md`、`vue-spa-attacks.md`
 
 ## Constraints
 

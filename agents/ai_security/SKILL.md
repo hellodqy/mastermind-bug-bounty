@@ -19,7 +19,7 @@ metadata:
 
 - Chatbot / RAG / Agent / Tool calling / MCP / code sandbox 入口
 - 上传文档、网页索引、插件工具、函数调用、审计日志
-- `skills/ai_security/SKILL.md` 和 `references/ai-security-testing.md`
+- `skills/ai_security/SKILL.md`；资源索引：`references/INDEX.md`，候选资源：`ai-security-testing.md`
 
 ## Constraints
 

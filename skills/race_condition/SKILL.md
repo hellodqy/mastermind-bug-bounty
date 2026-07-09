@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - 测试账号、优惠券/积分/订单/提现/库存/签到接口
-- 参考：`references/bug_classes.md`
+- 资源索引：`references/INDEX.md`；候选资源：`bug_classes.md`
 
 ## Constraints
 

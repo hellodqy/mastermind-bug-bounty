@@ -101,6 +101,18 @@ Rules:
 - no exaggerated impact
 - PENDING/INFO items stay out of the main report
 
+## Knowledge Loading
+
+Knowledge uses progressive disclosure:
+
+| Layer | Loaded When | Content |
+|---|---|---|
+| Metadata | Agent startup | Skill name and one-line description |
+| Instruction | After Skill match | Goal, tool/input list, constraints, chain-first questions |
+| Resource | On demand | Exploit details, payload libraries, references, templates |
+
+All large knowledge modules belong in `references/` and are reached through `references/INDEX.md`. Do not preload every module into the prompt; load the smallest resource that matches the current Phase 1/2 hypothesis.
+
 ## Usage
 
 ```bash
