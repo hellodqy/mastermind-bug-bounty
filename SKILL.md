@@ -108,12 +108,58 @@ AI must produce:
 
 - Ranked attack surface list
 - Reason for each priority
+- Priority score using `impact * 0.4 + exploitability * 0.3 + confidence * 0.2`
+- Confidence score from 0 to 1 for each hypothesis
 - Likely vulnerability directions
 - Planned test approach
 - Potential attack-chain connections
 - Required credentials, with login URL if credentials are requested
 
 The output is a working plan for Phase 2, not a report.
+
+## 1.1 Confidence and Priority
+
+Every attack-surface hypothesis must carry a `confidence` score from 0 to 1.
+
+Confidence sources:
+
+- technical fingerprint match
+- known vulnerability pattern match
+- response specificity, where unique paths/keywords count more than generic 404/403 pages
+- context consistency, such as Spring Boot + Actuator increasing confidence and PHP + Actuator lowering it
+
+Confidence thresholds:
+
+- `< 0.4`: low confidence; switch direction unless new evidence appears for free
+- `0.4 - 0.7`: medium confidence; collect more evidence before exploit/verification
+- `> 0.8`: high confidence; move directly into verification and exploitation
+
+When multiple attack surfaces are queued, sort by:
+
+`priority_score = impact * 0.4 + exploitability * 0.3 + confidence * 0.2`
+
+Do not add novelty or cleverness as a scoring factor. The score is a rough steering aid, not an authority.
+
+Impact guide:
+
+- RCE: `1.0`
+- data leakage: `0.8`
+- authorization bypass / IDOR: `0.7`
+- pure information disclosure: `0.5`
+- XSS: `0.3`
+- CORS misconfiguration: `0.2`
+
+Exploitability guide:
+
+- unauthenticated: `1.0`
+- requires weak/default credential: `0.6`
+- requires specific conditions: `0.4`
+
+Examples:
+
+- heapdump leak: roughly `0.9`
+- Swagger exposure: roughly `0.7`
+- CORS issue: roughly `0.3`
 
 ## Phase 2 | 自主攻击
 
@@ -124,13 +170,16 @@ Core rule:
 Autonomous loop:
 
 1. Pick the highest-priority attack surface
-2. Form a vulnerability hypothesis
+2. Form a vulnerability hypothesis with confidence, impact, exploitability, and priority score
 3. Design and execute a test
 4. Interpret the result
-5. If uncertain, try a different angle
-6. If disproven, log the negative result and move on
-7. If a new attack surface appears, append it to the queue
-8. Stop only when all surfaces are tested, a confirmed high-risk issue is found, or five consecutive attempts produce no progress
+5. If confidence drops below 0.4, log why and change direction
+6. If confidence is 0.4-0.7, collect more evidence
+7. If confidence rises above 0.8, enter verification and exploitation
+8. If uncertain, try a different angle
+9. If disproven, log the negative result and move on
+10. If a new attack surface appears, score it and append it to the queue
+11. Stop only when all surfaces are tested, a confirmed high-risk issue is found, or five consecutive attempts produce no progress
 
 Python support in this phase:
 

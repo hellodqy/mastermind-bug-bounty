@@ -49,7 +49,8 @@ PIPELINE: list[Phase] = [
         depends_on=["asset_recon"],
         ai_directive=(
             "基于侦察结果，自主排序最高价值攻击面，说明优先级、测试假设、"
-            "预计证据和可能攻击链。本阶段禁止实际攻击。"
+            "预计证据和可能攻击链。每个假设必须给出confidence、impact、"
+            "exploitability和priority_score。本阶段禁止实际攻击。"
         ),
     ),
     Phase(
@@ -68,6 +69,7 @@ PIPELINE: list[Phase] = [
         depends_on=["attack_surface_analysis"],
         ai_directive=(
             "按优先级逐个测，每测完一个自己判断继续、换方向还是收手；"
+            "confidence低于0.4换方向，0.4到0.7补证，高于0.8验证利用；"
             "不要询问是否继续。只有测完所有攻击面、找到确定高危、或连续五次没进展才停。"
         ),
     ),

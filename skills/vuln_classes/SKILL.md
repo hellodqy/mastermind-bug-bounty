@@ -21,10 +21,10 @@ metadata:
 ## Constraints
 
 1. 不按清单机械扫描；只测与上下文匹配的方向。
-2. 优先能证明影响的漏洞类。
-3. 同一个信号要考虑上下游链路，而不是单点结论。
+2. 每个方向都输出 `confidence`、`impact`、`exploitability`、`priority_score`。
+3. 优先能证明影响的漏洞类。
 4. Payload 细节按需从 references 加载。
-5. 不能证明影响则不进入报告正文。
+5. 低于 0.4 置信度换方向；0.4-0.7 补证；高于 0.8 验证利用。
 
 ## Chain Questions
 
