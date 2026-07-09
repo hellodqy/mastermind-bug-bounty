@@ -15,6 +15,10 @@ from shared.utils import now_iso, read_text
 from workflow.state import load_hunt, load_recent_worklog
 
 
+def _phase_value(phase) -> str:
+    return phase.value if hasattr(phase, "value") else str(phase)
+
+
 def inject_context(hunt_dir: str | Path, target_url: str | None = None) -> str:
     """Compose the full session context for AI consumption.
 
@@ -88,8 +92,8 @@ def _format_context(state: HuntState, recent_worklog: list[dict],
         "",
         "## Hunt Progress",
         f"- **Status**: {state.status.value}",
-        f"- **Current Phase**: {state.current_phase.value}",
-        f"- **Completed Phases**: {[p.value for p in state.completed_phases] or 'None yet'}",
+        f"- **Current Phase**: {_phase_value(state.current_phase)}",
+        f"- **Completed Phases**: {[_phase_value(p) for p in state.completed_phases] or 'None yet'}",
         "",
     ]
 
@@ -136,7 +140,7 @@ def _format_context(state: HuntState, recent_worklog: list[dict],
 
     # Next phase hint
     lines.append("## Next Action")
-    lines.append(f"Continue with phase: **{state.current_phase.value}**")
+    lines.append(f"Continue with phase: **{_phase_value(state.current_phase)}**")
     lines.append("")
     lines.append("=" * 60)
     lines.append("End of Session Context")

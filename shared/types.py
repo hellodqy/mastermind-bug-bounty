@@ -32,13 +32,18 @@ class HuntStatus(str, Enum):
 
 
 class PhaseName(str, Enum):
+    ASSET_RECON = "asset_recon"
+    ATTACK_SURFACE_ANALYSIS = "attack_surface_analysis"
+    AUTONOMOUS_ATTACK = "autonomous_attack"
+    REPORT_GENERATION = "report_generation"
+    # Legacy v3.1 phase names kept so existing state.json files still load.
     RECON = "recon"
     DEPENDENCY_SCAN = "dependency_scan"
     API_FUZZ = "api_fuzz"
-    CRYPTO_ATTACK = "crypto_attack"     # JWT/AES/RSA/encoding — AI 优势赛道
+    CRYPTO_ATTACK = "crypto_attack"
     BYPASS = "bypass"
-    EXPLOIT = "exploit"                  # Includes report generation
-    AI_SECURITY = "ai_security"          # Standalone, not in default pipeline
+    EXPLOIT = "exploit"
+    AI_SECURITY = "ai_security"
 
 
 class FindingStatus(str, Enum):
@@ -137,7 +142,7 @@ class HuntState:
     hunt_id: str
     target: Target
     status: HuntStatus = HuntStatus.ACTIVE
-    current_phase: PhaseName = PhaseName.RECON
+    current_phase: PhaseName = PhaseName.ASSET_RECON
     findings: list[Finding] = field(default_factory=list)
     completed_phases: list[PhaseName] = field(default_factory=list)
     agents: dict[str, AgentState] = field(default_factory=dict)

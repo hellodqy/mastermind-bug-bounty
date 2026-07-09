@@ -22,6 +22,10 @@ if str(_PKG_ROOT) not in sys.path:
     sys.path.insert(0, str(_PKG_ROOT))
 
 
+def _phase_value(phase) -> str:
+    return phase.value if hasattr(phase, "value") else str(phase)
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     """Execute the full bug bounty pipeline against a target."""
     from workflow.orchestrator import Orchestrator
@@ -43,7 +47,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     print(f"Hunt ID: {state.hunt_id}")
     print(f"Target: {state.target.url}")
     print(f"Status: {state.status.value}")
-    print(f"Phases completed: {[p.value for p in state.completed_phases]}")
+    print(f"Phases completed: {[_phase_value(p) for p in state.completed_phases]}")
     print(f"Total findings: {len(state.findings)}")
 
     approved = [f for f in state.findings
@@ -79,8 +83,8 @@ def cmd_resume(args: argparse.Namespace) -> int:
 
     print(f"\nResuming hunt: {state.hunt_id}")
     print(f"Target: {state.target.url}")
-    print(f"Current phase: {state.current_phase.value}")
-    print(f"Completed phases: {[p.value for p in state.completed_phases]}")
+    print(f"Current phase: {_phase_value(state.current_phase)}")
+    print(f"Completed phases: {[_phase_value(p) for p in state.completed_phases]}")
 
     orch = Orchestrator(hunt_dir=args.hunt_dir)
     state = orch.run(state.target.url, scope=state.target.scope)
@@ -102,8 +106,8 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"Target:      {state.target.url}")
     print(f"Scope:       {', '.join(state.target.scope)}")
     print(f"Status:      {state.status.value}")
-    print(f"Phase:       {state.current_phase.value}")
-    print(f"Completed:   {[p.value for p in state.completed_phases] or 'None'}")
+    print(f"Phase:       {_phase_value(state.current_phase)}")
+    print(f"Completed:   {[_phase_value(p) for p in state.completed_phases] or 'None'}")
     print(f"Findings:    {len(state.findings)} total")
     print(f"  Approved:  {sum(1 for f in state.findings if f.status.value == 'triage_approved')}")
     print(f"  Pending:   {sum(1 for f in state.findings if f.status.value in ('detected', 'triage_pending'))}")
@@ -143,6 +147,8 @@ def cmd_list_phases(_args: argparse.Namespace) -> int:
         print(f"   Agent: {phase.agent}")
         print(f"   Skills: {phase.skills or 'none'}")
         print(f"   {phase.description}")
+        if getattr(phase, "ai_directive", ""):
+            print(f"   AI Directive: {phase.ai_directive}")
         if phase.depends_on:
             print(f"   Depends on: {[str(d) for d in phase.depends_on]}")
     return 0

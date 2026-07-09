@@ -1,81 +1,121 @@
 ---
 name: mastermind-workflow
 description: >
-  Mastermind Bug Bounty workflow orchestrator. Drives the 6-phase
-  bug bounty lifecycle with 6-Hook middleware. Pipeline: Recon →
-  Dependency Scan → API Fuzz → Crypto Attack → Bypass → Exploit+Report.
-  AI 优势赛道: API Fuzz (值池联动) + Crypto Attack (JWT/AES/编码).
+  Four-phase autonomous bug bounty workflow. Python handles deterministic
+  collection and verifier support; AI owns prioritization, attack reasoning,
+  and autonomous direction changes.
 metadata:
-  tags: "workflow,orchestrator,bug-bounty,pentest"
-  category: "offensive-security"
-  hooks:
-    - context-injector
-    - coordinator-guard
-    - triage-gate
-    - worklog-recorder
-    - retry-detector
-    - handoff-saver
+  tags: "bug-bounty,workflow,autonomous-security,four-phase"
+  version: "4.0.0"
 ---
 
-# Mastermind Workflow — Bug Bounty Orchestrator
+# Mastermind Workflow — Four-Phase Orchestrator
 
-You are the **Mastermind Workflow Orchestrator**. Drive the bug bounty
-lifecycle, spawn specialist agents, enforce quality through 6 middleware hooks.
-
-## Pipeline (aligned with `workflow/pipeline.py`)
+## Pipeline
 
 ```
-RECON → DEPENDENCY_SCAN → API_FUZZ → CRYPTO_ATTACK → BYPASS → EXPLOIT
-  │                                                                    │
-  └── JS深度分析(基石)                                                 └── + Report
-      产出: _endpoint_params.json                                      产出: .docx
-            _secrets_found.json
-            _hash_routes.txt
-
-可选: AI_SECURITY (仅AI/LLM目标)
+Phase 0 | 资产侦察
+  ↓
+Phase 1 | 攻击面分析
+  ↓
+Phase 2 | 自主攻击
+  ↓
+Phase 3 | 报告生成
 ```
 
-★ = AI 优势赛道
+## Phase 0 | 资产侦察
 
-| Phase | Agent | Skills | Role |
-|-------|-------|--------|------|
-| Recon ★ | recon | js_analysis, source_leak, passive_recon | 基石：JS分析决定上限 |
-| Dependency Scan | recon | dependency_cve | 快速命中：CVE匹配 |
-| API Fuzz ★ | api_fuzz | api_fuzz, data_linkage, graphql_test | 核心：值池联动注入 |
-| Crypto Attack ★ | crypto_attack | crypto_attack, jwt_attack | 优势：解密/JWT攻击 |
-| Bypass | bypass | auth_bypass, oauth_sso | 标准：403/401/OAuth |
-| Exploit + Report | exploit | vuln_classes, race_condition, websocket_test | 变现：漏洞利用+报告 |
+AI directive:
 
-## Core Methodology (贯穿全阶段)
+> 摸清这个目标所有对外资产。
 
-```
-JS参数需求表 (_endpoint_params.json) × 响应值池 (_leaked_values.json)
-    = 联动注入矩阵 → A返回的参数值 → B请求的参数输入 → 闭环永不停止
-```
+给 AI 的工具清单只描述能力，不规定顺序：
 
-## Cross-Cutting
+- DNS 解析
+- 子域名枚举
+- JS 下载
+- sourcemap 下载
+- 代码泄露搜索
+- Swagger/API 文档暴露探测
+- 常见路径字典探测
 
-- **多Token管理**: `_auth_matrix.json` track which token/role can access what
-- **OOB盲打**: dnslog / Burp Collaborator / interactsh for blind vulns
-- **语义差异**: Compare response semantics, not just size
-- **源泄露搜索**: GitHub/Gitee background search from Phase 0
+Python 负责确定性执行：
 
-## Hook Summary
+- 批量下载 JS 和 sourcemap
+- 从 JS 中提取 API 端点、HTTP 方法、参数、认证方式
+- 探测 Swagger/OpenAPI 暴露
+- 跑常见路径字典
+- 输出 `_endpoint_params.json`、`_source_leaks.txt`、`_headers.txt` 等结构化结果
 
-| Hook | When | Action |
-|------|------|--------|
-| Context Injector | Session start | Load state + worklog + handoff |
-| Coordinator Guard | Pre-tool | Rate-limit + delegation warnings |
-| Triage Gate | Pre-report | HARD: 4-stage finding validation |
-| Worklog Recorder | Post-tool | Dual-write JSONL + Markdown |
-| Retry Detector | Post-agent | Detect surrender → inject bypass (max 3) |
-| Handoff Saver | Session end | Serialize full state |
+AI 拿到 Python 输出后自行做开放判断。例如 Actuator 和 Druid 同时 200 时，AI 应主动联想到 Spring Boot 暴露面组合，而不是等待写死规则触发。
 
-## Behavioral Rules
+## Phase 1 | 攻击面分析
 
-1. Never skip hooks or phases — pipeline is ordered for a reason
-2. Delegate specialist work — load the right skills/ agent files
-3. Max 3 retries per agent — after 3, accept conclusion + flag for manual
-4. Impact > Detection — triage gate enforces this
-5. JS analysis is the FOUNDATION — _endpoint_params.json MUST exist before API_FUZZ
-6. Data never goes cold — every response feeds the value pool → linkage loop
+本阶段不动手，只分析。
+
+AI 必须基于 Phase 0 结果输出：
+
+- 攻击面清单
+- 优先级排序
+- 每个优先级的原因
+- 计划测试的漏洞方向
+- 可能串联成攻击链的位置
+- 需要凭据时，必须给出已发现的登录入口或说明未发现入口
+
+## Phase 2 | 自主攻击
+
+核心规则只有一句：
+
+> 按优先级逐个测，每测完一个自己判断继续还是换方向还是收手，不要问用户要不要继续，只有测完所有面、找到确定高危、或者连续五次没进展才停。
+
+执行循环：
+
+1. 取一个攻击面
+2. AI 提出一个可能漏洞方向
+3. AI 自己设计测试方案并调用工具
+4. 观察结果并判断是否为漏洞
+5. 不确定就换角度继续试
+6. 确定不是就记录负结果并换下一个
+7. 发现新攻击面就追加进列表
+8. 发现漏洞后提取新数据、权限、token、路由、配置和上下游系统，重新进入攻击面队列
+9. 循环直到满足停止条件
+
+Python 在本阶段只提供确定性支撑：
+
+- blind probe
+- 响应值池挖掘
+- `_endpoint_params.json × _leaked_values.json` 联动注入
+- 方法/Content-Type fallback
+- Pair Completeness Gate
+
+## Phase 3 | 报告生成
+
+本阶段不需要 AI 发挥。
+
+只报告 Verifier 确认过的漏洞，固定模板如下：
+
+- 标题
+- 漏洞类型
+- 危害等级
+- URL
+- 复现步骤
+- 证据
+- 修复建议
+
+原则：
+
+- 证据必须可验证
+- 不推测
+- 不夸大
+- 检测信号不等于漏洞
+- PENDING/INFO 只能进附录，不能进正文
+
+## Hooks
+
+- Context Injector: 恢复目标、阶段、日志和 handoff
+- Coordinator Guard: 只做软提醒，不打断 AI 自主决策
+- Triage Gate: 报告前硬门，只允许已证明影响的漏洞进入报告
+- Pair Completeness Gate: 自主攻击阶段后确认高价值值池已消费
+- Worklog Recorder: 记录工具调用、发现、负结果和阶段判断
+- Retry Detector: 识别过早放弃并注入绕过/换角度建议
+- Handoff Saver: 保存下次继续所需的状态

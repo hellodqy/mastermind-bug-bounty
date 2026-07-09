@@ -15,6 +15,10 @@ from shared.types import AgentState, Finding, HuntState
 from shared.utils import now_iso, write_json
 
 
+def _phase_value(phase) -> str:
+    return phase.value if hasattr(phase, "value") else str(phase)
+
+
 def save(hunt_dir: str | Path, state: HuntState,
          custom_instructions: str = "") -> str:
     """Serialize full hunt state and save as handoff document.
@@ -61,7 +65,7 @@ def _build_document(state: HuntState, custom: str) -> str:
         f"hunt_id: {state.hunt_id}",
         f"target: {meta.url}",
         f"status: {state.status.value}",
-        f"current_phase: {state.current_phase.value}",
+        f"current_phase: {_phase_value(state.current_phase)}",
         f"findings_total: {len(state.findings)}",
         "---",
         "",
@@ -73,8 +77,8 @@ def _build_document(state: HuntState, custom: str) -> str:
         f"- **Target**: {meta.url}",
         f"- **Scope**: {', '.join(meta.scope) if meta.scope else 'N/A'}",
         f"- **Status**: {state.status.value}",
-        f"- **Current Phase**: {state.current_phase.value}",
-        f"- **Completed Phases**: {[p.value for p in state.completed_phases] or 'None'}",
+        f"- **Current Phase**: {_phase_value(state.current_phase)}",
+        f"- **Completed Phases**: {[_phase_value(p) for p in state.completed_phases] or 'None'}",
         f"- **WAF/CDN**: {meta.waf_cdn or 'Not yet identified'}",
         f"- **Tech Stack**: {_fmt_tech(meta.tech_stack)}",
         f"- **Endpoints Discovered**: {len(meta.endpoints_discovered)}",
@@ -157,7 +161,7 @@ def _build_document(state: HuntState, custom: str) -> str:
     if pending:
         lines.append("- [ ] Complete triage for pending findings")
         lines.append("- [ ] Retry failed agents with bypass strategies")
-    lines.append(f"- [ ] Continue from phase: **{state.current_phase.value}**")
+    lines.append(f"- [ ] Continue from phase: **{_phase_value(state.current_phase)}**")
     lines.append("- [ ] Rotate to untested endpoints")
     lines.append("")
 

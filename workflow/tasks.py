@@ -1,8 +1,9 @@
 """
-workflow/tasks.py — Executable Pipeline (v3.1)
-6 Phases, ~20 tasks. curl-driven. No embedded scripts. No MCP hell.
-Phase 0: COLLECT  Phase 1: ANALYZE  Phase 2: TEST
-Phase 3: CRYPTO   Phase 4: BYPASS   Phase 5: EXPLOIT
+workflow/tasks.py — Executable task library for the four-phase pipeline.
+
+Phase 0 ASSET_RECON runs deterministic collection/analysis tasks.
+Phase 2 AUTONOMOUS_ATTACK reuses deterministic API/value-linkage helpers.
+Phase 1 and Phase 3 are primarily AI/reporter driven.
 """
 
 from __future__ import annotations
@@ -838,22 +839,26 @@ else:
 ]
 
 PHASE_TASKS = {
-    "recon":           COLLECT_TASKS + ANALYZE_TASKS,   # Phase 0: JS采集+深度分析
-    "dependency_scan": [],                               # Phase 1: CVE匹配 (skill-driven, see skills/dependency_cve/SKILL.md)
-    "api_fuzz":        TEST_TASKS,                       # Phase 2: API盲测+值池联动+Gate检查
-    "crypto_attack":   [],                               # Phase 3: 加密破解+JWT攻击 (skill-driven)
-    "bypass":          [],                               # Phase 4: 401/403/OAuth绕过 (skill-driven)
-    "exploit":         [],                               # Phase 5: 漏洞利用+报告 (skill-driven)
-    "ai_security":     [],                               # Optional: AI/LLM安全 (skill-driven)
+    "asset_recon": COLLECT_TASKS + ANALYZE_TASKS,
+    "attack_surface_analysis": [],
+    "autonomous_attack": TEST_TASKS,
+    "report_generation": [],
 }
 
-# Keep old keys for backward compatibility with pre-v3.1 hunt states
+# Keep old keys for backward compatibility with pre-four-phase hunt states.
+PHASE_TASKS["recon"] = COLLECT_TASKS + ANALYZE_TASKS
+PHASE_TASKS["api_fuzz"] = TEST_TASKS
+PHASE_TASKS["dependency_scan"] = []
+PHASE_TASKS["crypto_attack"] = []
+PHASE_TASKS["bypass"] = []
+PHASE_TASKS["exploit"] = []
+PHASE_TASKS["ai_security"] = []
 PHASE_TASKS["collect"] = COLLECT_TASKS
 PHASE_TASKS["analyze"] = ANALYZE_TASKS
 PHASE_TASKS["test"] = TEST_TASKS
 
 def get_tasks_for_phase(name):
-    """Get tasks for a phase. Returns empty list for skill-driven phases (crypto/bypass/exploit)."""
+    """Get deterministic tasks for a phase."""
     return PHASE_TASKS.get(name, [])
 
 def count_all_steps():

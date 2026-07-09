@@ -165,9 +165,9 @@ class TaskExecutor:
         """Run phase transition gate checks after a phase completes."""
         gates: list[GateResult] = []
 
-        if phase_name == "analyze":
+        if phase_name in ("asset_recon", "analyze", "recon"):
             gates.append(self._js_analysis_gate())
-        elif phase_name == "test":
+        elif phase_name in ("autonomous_attack", "test", "api_fuzz"):
             gates.append(self._pair_completeness_gate())
 
         return gates

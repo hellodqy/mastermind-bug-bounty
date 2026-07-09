@@ -42,20 +42,28 @@ class Orchestrator:
             print(f"\n{'='*60}")
             print(f"PHASE: {phase.name.upper()} — {phase.description}")
             print(f"{'='*60}")
+            if phase.ai_directive:
+                print(f"AI Directive: {phase.ai_directive}")
 
             # Check dependencies
+            completed_names = [
+                p.value if hasattr(p, "value") else str(p)
+                for p in self.state.completed_phases
+            ]
             dep_missing = False
             for dep in phase.depends_on:
-                if dep not in self.state.completed_phases:
+                if dep not in completed_names:
                     print(f"  [!] Dependency '{dep}' not done. Skipping.")
                     dep_missing = True
                     break
             if dep_missing:
                 continue
 
-            if phase.name in self.state.completed_phases:
+            if phase.name in completed_names:
                 print(f"  Already completed.")
                 continue
+
+            self.state.current_phase = phase.name
 
             executor = TaskExecutor(self.hunt_dir, self.state.target.url)
             result = executor.run_phase(phase.name)

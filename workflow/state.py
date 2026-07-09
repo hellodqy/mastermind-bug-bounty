@@ -112,6 +112,9 @@ def save_hunt(state: HuntState, hunt_dir: str | Path) -> bool:
 # ---------------------------------------------------------------------------
 
 def _serialize_state(state: HuntState) -> dict:
+    def _phase_value(phase) -> str:
+        return phase.value if hasattr(phase, "value") else str(phase)
+
     return {
         "hunt_id": state.hunt_id,
         "target": {
@@ -123,7 +126,7 @@ def _serialize_state(state: HuntState) -> dict:
             "js_files": state.target.js_files,
         },
         "status": state.status.value,
-        "current_phase": state.current_phase.value,
+        "current_phase": _phase_value(state.current_phase),
         "findings": [
             {
                 "id": f.id,
@@ -140,7 +143,7 @@ def _serialize_state(state: HuntState) -> dict:
             }
             for f in state.findings
         ],
-        "completed_phases": [p.value for p in state.completed_phases],
+        "completed_phases": [_phase_value(p) for p in state.completed_phases],
         "agents": {
             aid: {
                 "agent_id": a.agent_id,
@@ -208,7 +211,7 @@ def _deserialize_state(raw: dict) -> HuntState:
         hunt_id=raw["hunt_id"],
         target=target,
         status=HuntStatus(raw.get("status", "active")),
-        current_phase=PhaseName(raw.get("current_phase", "recon")),
+        current_phase=PhaseName(raw.get("current_phase", "asset_recon")),
         findings=findings,
         completed_phases=[PhaseName(p) for p in raw.get("completed_phases", [])],
         agents=agents,
