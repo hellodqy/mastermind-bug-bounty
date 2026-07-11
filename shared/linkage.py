@@ -527,7 +527,7 @@ def check_pair_completeness(pairs: list[UnconsumedPair],
     """Check if all value-endpoint pairs have been tested.
 
     Used as a phase transition gate: before moving from API_FUZZ to
-    CRYPTO_ATTACK, verify that no high-priority pairs remain unconsumed.
+    autonomous attack verification, ensure no high-priority pairs remain unconsumed.
 
     Args:
         pairs: List of UnconsumedPair from PairingEngine.match()

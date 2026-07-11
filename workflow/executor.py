@@ -53,6 +53,7 @@ class PhaseResult:
     tasks_fail: int = 0
     task_results: list[TaskResult] = field(default_factory=list)
     gate_results: list[GateResult] = field(default_factory=list)
+    verified_findings: list = field(default_factory=list)
 
 
 class TaskExecutor:
@@ -88,7 +89,7 @@ class TaskExecutor:
                 fail += 1
                 print(f"  [FAIL] {task.task_id}: {'; '.join(tr.failures[:2])}")
 
-        gate_results = self._run_phase_gates(phase_name)
+        gate_results, verified_findings = self._run_phase_gates(phase_name)
 
         return PhaseResult(
             phase=phase_name,
@@ -97,6 +98,7 @@ class TaskExecutor:
             tasks_fail=fail,
             task_results=self.results,
             gate_results=gate_results,
+            verified_findings=verified_findings,
         )
 
     def _run_task(self, task: Task) -> TaskResult:
@@ -161,16 +163,43 @@ class TaskExecutor:
         # or use {target} placeholder which was already replaced
         return self.hunt_dir / "output" / target_path / output_file
 
-    def _run_phase_gates(self, phase_name: str) -> list[GateResult]:
+    def _run_phase_gates(self, phase_name: str) -> tuple[list[GateResult], list]:
         """Run phase transition gate checks after a phase completes."""
         gates: list[GateResult] = []
+        verified_findings = []
 
         if phase_name in ("asset_recon", "analyze", "recon"):
             gates.append(self._js_analysis_gate())
+        elif phase_name == "attack_surface_analysis":
+            gates.append(self._attack_surface_contract_gate())
         elif phase_name in ("autonomous_attack", "test", "api_fuzz"):
             gates.append(self._pair_completeness_gate())
+            verifier_gate, verified_findings = self._verifier_gate()
+            gates.append(verifier_gate)
 
-        return gates
+        return gates, verified_findings
+
+    def _artifact_path(self, relative: str) -> Path:
+        target_path = self.target_url.split("://")[-1].rstrip("/")
+        return self.hunt_dir / "output" / target_path / relative
+
+    def _attack_surface_contract_gate(self) -> GateResult:
+        from workflow.contracts import validate_attack_surfaces
+
+        passed, summary = validate_attack_surfaces(
+            self._artifact_path("findings/_attack_surfaces.json")
+        )
+        return GateResult(passed, "Attack Surface Contract", summary, not passed)
+
+    def _verifier_gate(self) -> tuple[GateResult, list]:
+        from workflow.contracts import verify_candidates
+
+        approved, summary = verify_candidates(
+            self._artifact_path("findings/_candidate_findings.json"),
+            self._artifact_path("findings/_verified_findings.json"),
+        )
+        blocked = summary.startswith("Missing") or summary.startswith("Invalid")
+        return GateResult(not blocked, "Finding Verifier", summary, blocked), approved
 
     def _js_analysis_gate(self) -> GateResult:
         """Check JS analysis completeness before proceeding to test phase."""

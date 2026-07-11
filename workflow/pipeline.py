@@ -69,7 +69,7 @@ PIPELINE: list[Phase] = [
         depends_on=["attack_surface_analysis"],
         ai_directive=(
             "按优先级逐个测，每测完一个自己判断继续、换方向还是收手；"
-            "confidence低于0.4换方向，0.4到0.7补证，高于0.8验证利用；"
+            "confidence低于0.4换方向，0.4到0.8之间补证，达到0.8验证利用；"
             "不要询问是否继续。只有测完所有攻击面、找到确定高危、或连续五次没进展才停。"
         ),
     ),

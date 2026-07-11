@@ -48,6 +48,21 @@ COLLECT_TASKS = [
 
     Task("c0_source_leak", "collect", 4, "GitHub + Gitee source leak search",
          [TaskStep(1, "github", "Search org and code", "search_users({company_name}) -> search_code({domain} .env password api_key secret jwt) -> save findings/_source_leaks.txt", "findings/_source_leaks.txt")]),
+
+    Task("c0_external_assets", "collect", 5, "Resolve DNS and collect authorized subdomains",
+         [TaskStep(1, "dns/subdomain", "Resolve target and enumerate in-scope names",
+          "Resolve A/AAAA/CNAME/MX/TXT records for {domain}. Use the available passive subdomain tools, keep only names within the authorized scope, and save structured JSON with hostname, record type, value, source, and in_scope fields.",
+          "findings/_external_assets.json", True)]),
+
+    Task("c0_exposure_probe", "collect", 6, "Probe Swagger/OpenAPI and common exposure paths",
+         [TaskStep(1, "http", "Probe a bounded common-path dictionary",
+          "Probe Swagger/OpenAPI endpoints and a bounded set of common diagnostic paths on in-scope HTTP assets. Record URL, status, content type, title or distinctive marker, and redirect target. Do not classify a response as a vulnerability.",
+          "findings/_exposure_probe.json", True)]),
+
+    Task("c0_sourcemaps", "collect", 7, "Download referenced JavaScript sourcemaps",
+         [TaskStep(1, "python/http", "Discover and download sourcemaps",
+          "Read sourceMappingURL directives from every downloaded JS file, resolve relative URLs against the original script URL, download in-scope maps, and save an index containing JS file, map URL, local path, status, and size.",
+          "findings/_sourcemaps.json", True)]),
 ]
 
 # ===== Phase 1: ANALYZE =====
@@ -729,8 +744,8 @@ if unconsumed:
     print("WARN:", unconsumed, "value entries still pending/consuming")
 """, "findings/_linkage_results.json", True)]),
 
-    Task("t4_summary", "test", 5, "Summarize all findings",
-         [TaskStep(1, "python", "Aggregate findings into report", r"""import json, os
+    Task("t4_candidates", "test", 5, "Aggregate candidate findings for verification",
+         [TaskStep(1, "python", "Aggregate signals into candidate findings", r"""import json, os
 hunt_dir = "output/{target}"
 findings_dir = hunt_dir + "/findings"
 
@@ -739,7 +754,7 @@ blind = open(findings_dir + "/_blind_results.txt").read() if os.path.exists(find
 linkage = json.load(open(findings_dir + "/_linkage_results.json")) if os.path.exists(findings_dir + "/_linkage_results.json") else []
 pool = json.load(open(findings_dir + "/_leaked_values.json")) if os.path.exists(findings_dir + "/_leaked_values.json") else {}
 
-vulns = []
+candidates = []
 
 # Blind probe: unauthenticated 200 responses with data
 lines = blind.split("\n")
@@ -750,33 +765,24 @@ for i, line in enumerate(lines):
     elif "HTTP_CODE:200" in line:
         prev = "\n".join(lines[max(0, i-3):i])
         if "{" in prev and ('"code":0' in prev or '"total"' in prev or '"records"' in prev):
-            vulns.append({"type": "Unauthenticated Data Access", "endpoint": cur, "evidence": prev[:200]})
+            candidates.append({"vuln_class": "Unauthenticated Data Access", "target_url": cur, "evidence": prev[:200], "impact": "", "poc_steps": [], "confidence": 0.5, "severity": "medium"})
 
 # Linkage hits
 for r in linkage:
     if r.get("hit"):
-        vulns.append({"type": "IDOR/Data Leak", "endpoint": r["ep"], "param": r["param"], "value": r["value"], "evidence": r.get("preview", "")})
+        candidates.append({"vuln_class": "IDOR/Data Leak", "target_url": r["ep"], "evidence": r.get("preview", ""), "impact": "", "poc_steps": [], "confidence": 0.6, "severity": "high", "context": {"param": r["param"], "value": r["value"]}})
 
 # Sensitive fields in value pool (handle v2.4 format)
 for k, v in pool.items():
     vals = v.get("values", [])
     for ve in vals:
         if isinstance(ve, dict) and ve.get("priority") == "HIGH":
-            vulns.append({"type": "Sensitive Field Exposure", "field": k, "value": ve.get("value", ""), "source": ve.get("source_endpoint", "")})
+            candidates.append({"vuln_class": "Sensitive Field Exposure", "target_url": ve.get("source_endpoint", ""), "evidence": "Observed high-priority field: " + k, "impact": "", "poc_steps": [], "confidence": 0.5, "severity": "medium", "context": {"field": k, "value": ve.get("value", "")}})
 
-json.dump(vulns, open(findings_dir + "/_findings.json", "w"), indent=2, ensure_ascii=False)
-os.makedirs(hunt_dir + "/reports", exist_ok=True)
-
-with open(hunt_dir + "/reports/_summary.txt", "w") as f:
-    f.write("Target: " + BASE + "\n")
-    f.write("Findings: " + str(len(vulns)) + "\n\n")
-    for i, v in enumerate(vulns, 1):
-        f.write(str(i) + ". [" + v.get("type", "?") + "] " + str(v.get("endpoint", "")) + "\n")
-
-print("Report:", len(vulns), "findings ->", hunt_dir + "/reports/_summary.txt")
-for v in vulns:
-    print("  [" + v.get("type", "?") + "]", v.get("endpoint", ""))
-""", "reports/_summary.txt", True)]),
+json.dump({"candidates": candidates}, open(findings_dir + "/_candidate_findings.json", "w"), indent=2, ensure_ascii=False)
+print("Candidates:", len(candidates), "->", findings_dir + "/_candidate_findings.json")
+print("These are signals only. Add reproducible impact and PoC evidence before Verifier review.")
+""", "findings/_candidate_findings.json", True)]),
 
     Task("t5_gate", "test", 99, "Pair Completeness Gate: verify no HIGH/CRITICAL values remain unconsumed",
          [TaskStep(1, "python", "Run check_pair_completeness from shared/linkage.py", r"""import json, sys, os
@@ -840,9 +846,21 @@ else:
 
 PHASE_TASKS = {
     "asset_recon": COLLECT_TASKS + ANALYZE_TASKS,
-    "attack_surface_analysis": [],
+    "attack_surface_analysis": [
+        Task("p1_attack_surface_plan", "attack_surface_analysis", 1,
+             "Produce the ranked attack-surface plan",
+             [TaskStep(1, "ai", "Analyze reconnaissance without active testing",
+              "Read Phase 0 outputs and write findings/_attack_surfaces.json. Each item must contain id, surface, hypothesis, evidence, confidence, impact, exploitability, priority_score, planned_test, and chain_links. Sort descending by priority_score. This phase must not send attack requests.",
+              "findings/_attack_surfaces.json", True)])
+    ],
     "autonomous_attack": TEST_TASKS,
-    "report_generation": [],
+    "report_generation": [
+        Task("p3_verified_report", "report_generation", 1,
+             "Generate reports from Verifier-approved findings only",
+             [TaskStep(1, "report", "Render the fixed evidence-based report",
+              "Read findings/_verified_findings.json. Generate reports/final_report.md with one section per approved finding: title, vulnerability type, severity, URL, reproduction steps, evidence, and remediation. If none are approved, generate a short no-confirmed-findings report. Never read candidates directly.",
+              "reports/final_report.md", True)])
+    ],
 }
 
 # Keep old keys for backward compatibility with pre-four-phase hunt states.

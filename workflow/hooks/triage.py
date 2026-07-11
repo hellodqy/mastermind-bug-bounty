@@ -39,9 +39,9 @@ def validate(finding: Finding, confidence_threshold: float = 0.7) -> TriageResul
         reasons.append("Vulnerability class not identified.")
 
     # Stage 3: Detection evidence
-    checks["has_evidence"] = bool(finding.evidence and len(finding.evidence) > 10)
+    checks["has_evidence"] = bool(finding.evidence and len(finding.evidence) >= 20)
     if not checks["has_evidence"]:
-        reasons.append("Insufficient detection evidence (need > 10 chars).")
+        reasons.append("Insufficient detection evidence (need at least 20 chars).")
 
     # Stage 4: Impact demonstrated — HARD GATE
     checks["impact_demonstrated"] = _check_impact(finding)
@@ -78,15 +78,12 @@ def _check_impact(f: Finding) -> bool:
     Impact is demonstrated when the finding proves the vulnerability
     can be exploited to produce a tangible security outcome.
     """
-    if f.impact and len(f.impact) > 20:
-        return True
-    if f.poc_steps and len(f.poc_steps) > 0:
-        return True
-    if f.evidence and "extracted" in f.evidence.lower():
-        return True
-    if f.evidence and "rce" in f.evidence.lower():
-        return True
-    return False
+    has_impact = bool(f.impact and len(f.impact.strip()) >= 20)
+    has_reproduction = bool(
+        len(f.poc_steps) >= 2
+        and all(isinstance(step, str) and step.strip() for step in f.poc_steps)
+    )
+    return has_impact and has_reproduction
 
 
 # ---------------------------------------------------------------------------

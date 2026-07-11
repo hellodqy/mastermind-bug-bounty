@@ -19,6 +19,7 @@ from shared.types import (
     HuntState,
     HuntStatus,
     PhaseName,
+    Severity,
     Target,
     WorklogEntry,
 )
@@ -180,7 +181,7 @@ def _deserialize_state(raw: dict) -> HuntState:
             id=f["id"],
             vuln_class=f["vuln_class"],
             target_url=f["target_url"],
-            severity=f["severity"],
+            severity=Severity(f["severity"]),
             confidence=f.get("confidence", 0.0),
             evidence=f.get("evidence", ""),
             impact=f.get("impact", ""),

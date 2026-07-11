@@ -20,7 +20,7 @@ description: >
 
 - Phase 0 | 资产侦察：摸清目标所有对外资产。
 - Phase 1 | 攻击面分析：只分析，不动手；输出 `confidence`、`impact`、`exploitability`、`priority_score`。
-- Phase 2 | 自主攻击：按优先级测试；`confidence < 0.4` 换方向，`0.4-0.7` 补证，`> 0.8` 验证利用。
+- Phase 2 | 自主攻击：按优先级测试；`confidence < 0.4` 换方向，`0.4 <= confidence < 0.8` 补证，`confidence >= 0.8` 验证利用。
 - Phase 3 | 报告生成：只报告 Verifier 确认过的漏洞。
 
 ## Knowledge Loading

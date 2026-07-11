@@ -24,7 +24,7 @@ metadata:
 2. 每个方向都输出 `confidence`、`impact`、`exploitability`、`priority_score`。
 3. 优先能证明影响的漏洞类。
 4. Payload 细节按需从 references 加载。
-5. 低于 0.4 置信度换方向；0.4-0.7 补证；高于 0.8 验证利用。
+5. 低于 0.4 置信度换方向；0.4 到 0.8 之间补证；达到 0.8 验证利用。
 
 ## Chain Questions
 

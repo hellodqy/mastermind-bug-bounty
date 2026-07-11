@@ -1481,7 +1481,7 @@ Endpoint type determines base severity BEFORE data sensitivity adjustment:
 | P3 | Race Condition | ~1,200 | Coupons, payments, inventory, multi-step ops |
 
 Decision rule: Statistics inform priority, but safety determines order.
-Safe-first: IDOR/泛查询/XSS/参数Fuzz first (Phase 3), SQLi/RCE/CMD later (Phase 3.8).
+Safe-first: prioritize low-impact validation first; load high-risk probing guidance only after the autonomous attack loop selects that direction.
 
 ---
 

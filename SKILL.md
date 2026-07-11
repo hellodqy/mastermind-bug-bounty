@@ -108,7 +108,7 @@ AI must produce:
 
 - Ranked attack surface list
 - Reason for each priority
-- Priority score using `impact * 0.4 + exploitability * 0.3 + confidence * 0.2`
+- Normalized priority score using `(impact * 0.4 + exploitability * 0.3 + confidence * 0.2) / 0.9`
 - Confidence score from 0 to 1 for each hypothesis
 - Likely vulnerability directions
 - Planned test approach
@@ -131,12 +131,12 @@ Confidence sources:
 Confidence thresholds:
 
 - `< 0.4`: low confidence; switch direction unless new evidence appears for free
-- `0.4 - 0.7`: medium confidence; collect more evidence before exploit/verification
-- `> 0.8`: high confidence; move directly into verification and exploitation
+- `0.4 <= confidence < 0.8`: medium confidence; collect more evidence before exploit/verification
+- `>= 0.8`: high confidence; move directly into verification and exploitation
 
 When multiple attack surfaces are queued, sort by:
 
-`priority_score = impact * 0.4 + exploitability * 0.3 + confidence * 0.2`
+`priority_score = (impact * 0.4 + exploitability * 0.3 + confidence * 0.2) / 0.9`
 
 Do not add novelty or cleverness as a scoring factor. The score is a rough steering aid, not an authority.
 
@@ -174,8 +174,8 @@ Autonomous loop:
 3. Design and execute a test
 4. Interpret the result
 5. If confidence drops below 0.4, log why and change direction
-6. If confidence is 0.4-0.7, collect more evidence
-7. If confidence rises above 0.8, enter verification and exploitation
+6. If confidence is at least 0.4 but below 0.8, collect more evidence
+7. If confidence reaches 0.8, enter verification and exploitation
 8. If uncertain, try a different angle
 9. If disproven, log the negative result and move on
 10. If a new attack surface appears, score it and append it to the queue

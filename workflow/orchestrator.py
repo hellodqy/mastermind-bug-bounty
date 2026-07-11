@@ -85,6 +85,11 @@ class Orchestrator:
                 continue
 
             if result.completed:
+                known_ids = {finding.id for finding in self.state.findings}
+                self.state.findings.extend(
+                    finding for finding in result.verified_findings
+                    if finding.id not in known_ids
+                )
                 self.state.completed_phases.append(phase.name)
                 print(f"\n  [OK] {phase.name.upper()} complete")
             else:

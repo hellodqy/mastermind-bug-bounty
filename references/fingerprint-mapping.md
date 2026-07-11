@@ -232,7 +232,7 @@ Framework recognized?
 │   ├── Has known default password? → Test first (highest success rate)
 │   ├── Has known RCE vulnerability in current version? → Exploit via BP MCP
 │   └── Has Swagger/Druid/Nacos exposed? → Enumerate → find hidden endpoints
-└── NO → Standard decision-tree testing (Phase 3)
+└── NO → Return to the autonomous attack queue and standard decision tree
 ```
 
 ### RuoYi Full Attack Chain (Framework Attack Pattern Template)

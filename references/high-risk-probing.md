@@ -1,6 +1,6 @@
-# 高危探测详细步骤 (Phase 3.8)
+# 高危探测参考（按需加载）
 
-> 从 SKILL.md Phase 3.8 迁出。进入 Phase 3.8 时加载。
+> 第三层资源。仅当自主攻击阶段选择了高风险验证方向时按需加载。
 > WARNING: 这些操作会触发 WAF 规则。仅在 Phase 0-3 安全测试完成且确认目标价值后执行。
 
 ---
@@ -8,7 +8,7 @@
 ## 核心模式：遍历+记录，互不阻塞
 
 ```
-Phase 3.8 执行模式（非"首次403=整体停止"）:
+高风险验证执行模式（非"首次403=整体停止"）:
   每个项目独立测试 → WAF 拦截=记入 blocked 清单 → 继续测下一项
   → blocked 清单写入 findings/_interim-phase3.8-blocked.md
   → 全部测完后再统一决定是否对 blocked 项做 WAF 绕过
@@ -105,14 +105,14 @@ SAFE MODE，1 次探测:
 
 ---
 
-## Phase 3.8 后处理
+## 高风险验证后处理
 
 ```
 全部项目测试完成 → blocked 清单写入 findings/_interim-phase3.8-blocked.md:
 
 blocked 清单非空:
   → 目标价值 HIGH → LAST RESORT: 对 blocked 项统一尝试 WAF 绕过
-    （仅对被拦截的具体项目，不是整个 Phase 3.8 重做）
+    （仅对被拦截的具体项目，不是整个高风险验证流程重做）
   → 目标价值 LOW → 接受损失，进入 Phase 5 报告
   → 绕过尝试结果写入 blocked 清单的同文件
 
