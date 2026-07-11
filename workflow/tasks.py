@@ -784,6 +784,11 @@ print("Candidates:", len(candidates), "->", findings_dir + "/_candidate_findings
 print("These are signals only. Add reproducible impact and PoC evidence before Verifier review.")
 """, "findings/_candidate_findings.json", True)]),
 
+    Task("t4_validate_leads", "test", 6, "Turn credential and exposure leads into validated candidates",
+         [TaskStep(1, "ai", "Investigate leads and preserve only demonstrated impact",
+          "Read _candidate_findings.json, _source_leaks.txt, _exposure_probe.json, _external_assets.json, _endpoint_params.json, and the Phase 1 attack-surface queue. For hardcoded API credentials, identify the owning API, authentication placement, endpoints, and parameters, then safely test whether the credential permits sensitive data access or a sensitive operation. For internal IP/domain, Swagger/OpenAPI, or Druid path leads, try context-appropriate authorization, path, method, header, routing, and deployment-prefix bypasses within scope. Write findings/_validated_candidates.json. Drop unsuccessful leads entirely. Credential findings must include credential_validation with tested, usable, sensitive_outcome, endpoint, request_evidence, and outcome_type. Exposure findings must include exposure_validation with bypass_attempted, access_achieved, sensitive_outcome, endpoint, request_evidence, and outcome_type. Never include raw secret values in user-visible fields.",
+          "findings/_validated_candidates.json", True)]),
+
     Task("t5_gate", "test", 99, "Pair Completeness Gate: verify no HIGH/CRITICAL values remain unconsumed",
          [TaskStep(1, "python", "Run check_pair_completeness from shared/linkage.py", r"""import json, sys, os
 

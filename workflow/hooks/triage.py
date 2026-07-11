@@ -9,13 +9,18 @@ Gate: HARD GATE — blocks findings without demonstrated IMPACT.
 from __future__ import annotations
 
 from shared.types import Finding, FindingStatus, TriageResult
+from workflow.reportability import exclusion_reason
 
 
 # ---------------------------------------------------------------------------
 # Validation checks
 # ---------------------------------------------------------------------------
 
-def validate(finding: Finding, confidence_threshold: float = 0.7) -> TriageResult:
+def validate(
+    finding: Finding,
+    confidence_threshold: float = 0.7,
+    enforce_reportability: bool = True,
+) -> TriageResult:
     """Run 4-stage validation on a finding.
 
     Stages:
@@ -27,6 +32,12 @@ def validate(finding: Finding, confidence_threshold: float = 0.7) -> TriageResul
     """
     checks: dict[str, bool] = {}
     reasons: list[str] = []
+
+    if enforce_reportability:
+        exclusion = exclusion_reason(finding)
+        checks["src_reportable_class"] = exclusion is None
+        if exclusion:
+            reasons.append(exclusion)
 
     # Stage 1: Target present
     checks["has_target"] = bool(finding.target_url and len(finding.target_url) > 0)

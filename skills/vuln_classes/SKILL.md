@@ -22,7 +22,7 @@ metadata:
 
 1. 不按清单机械扫描；只测与上下文匹配的方向。
 2. 每个方向都输出 `confidence`、`impact`、`exploitability`、`priority_score`。
-3. 优先能证明影响的漏洞类。
+3. API 凭据和暴露路径先作为线索验证，只有取得敏感数据/操作才创建候选；CORS、地图 API Key 直接忽略。
 4. Payload 细节按需从 references 加载。
 5. 低于 0.4 置信度换方向；0.4 到 0.8 之间补证；达到 0.8 验证利用。
 

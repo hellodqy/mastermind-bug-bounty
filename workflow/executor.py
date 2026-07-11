@@ -195,7 +195,7 @@ class TaskExecutor:
         from workflow.contracts import verify_candidates
 
         approved, summary = verify_candidates(
-            self._artifact_path("findings/_candidate_findings.json"),
+            self._artifact_path("findings/_validated_candidates.json"),
             self._artifact_path("findings/_verified_findings.json"),
         )
         blocked = summary.startswith("Missing") or summary.startswith("Invalid")

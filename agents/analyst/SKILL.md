@@ -23,7 +23,7 @@ metadata:
 1. 每个攻击面必须有证据来源和可证伪假设。
 2. 使用归一化优先级公式并按分数降序排列。
 3. 本阶段不得执行主动攻击或利用。
-4. 不把技术暴露直接判定为漏洞。
+4. 硬编码 API 凭据、内网地址、Swagger/OpenAPI、Druid 路径作为 `lead_only` 进入队列；地图 API Key、CORS 不进入队列。
 5. 输出必须符合 `_attack_surfaces.json` 产物合同。
 
 ## Chain-First Questions

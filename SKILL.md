@@ -18,7 +18,7 @@ metadata:
 1. **Python handles deterministic work**: downloading JS/sourcemaps, extracting endpoints, probing Swagger/common paths, value-pool pairing, and verifier support.
 2. **AI owns judgment**: asset interpretation, attack surface priority, hypothesis selection, direction changes, and chain reasoning are not hard-coded.
 3. **Finding is the start, not the end**: after every signal or confirmed issue, ask what upstream/downstream assets, data, permissions, tokens, or execution paths it unlocks.
-4. **Impact > detection**: a finding is not reportable until impact is verified.
+4. **Impact > detection**: hardcoded API credentials and exposed internal/Swagger/OpenAPI/Druid paths are leads, not findings. Test them for sensitive data access, sensitive operations, or a successful bypass; silently drop them if no such outcome is proven. CORS and client-side map API keys are ignored.
 5. **Do not ask whether to continue in Phase 2**: continue autonomously until a stop condition is met.
 6. **Record negative results**: "not vulnerable" is useful state.
 7. **Final user-visible output is Chinese**. Technical terms, payloads, curl commands, and URLs may remain original.
@@ -145,9 +145,8 @@ Impact guide:
 - RCE: `1.0`
 - data leakage: `0.8`
 - authorization bypass / IDOR: `0.7`
-- pure information disclosure: `0.5`
+- proven sensitive data disclosure: `0.8`; non-exploitable metadata disclosure: excluded
 - XSS: `0.3`
-- CORS misconfiguration: `0.2`
 
 Exploitability guide:
 
@@ -159,7 +158,6 @@ Examples:
 
 - heapdump leak: roughly `0.9`
 - Swagger exposure: roughly `0.7`
-- CORS issue: roughly `0.3`
 
 ## Phase 2 | 自主攻击
 

@@ -9,6 +9,7 @@ from pathlib import Path
 from shared.types import Finding, FindingStatus, Severity
 from shared.utils import now_iso
 from workflow.hooks.triage import validate
+from workflow.reportability import exclusion_reason
 
 
 def validate_attack_surfaces(path: Path) -> tuple[bool, str]:
@@ -67,6 +68,7 @@ def verify_candidates(candidate_path: Path, verified_path: Path) -> tuple[list[F
 
     approved: list[Finding] = []
     rejected: list[dict] = []
+    suppressed_reasons: dict[str, int] = {}
     for item in candidates:
         if not isinstance(item, dict):
             rejected.append({"candidate": item, "reasons": ["Candidate must be an object."]})
@@ -94,7 +96,16 @@ def verify_candidates(candidate_path: Path, verified_path: Path) -> tuple[list[F
             rejected.append({"candidate": item, "reasons": [f"Invalid schema: {exc}"]})
             continue
 
-        result = validate(finding, confidence_threshold=0.8)
+        suppression = exclusion_reason(finding, item)
+        if suppression:
+            suppressed_reasons[suppression] = suppressed_reasons.get(suppression, 0) + 1
+            continue
+
+        result = validate(
+            finding,
+            confidence_threshold=0.8,
+            enforce_reportability=False,
+        )
         if result.approved:
             finding.status = FindingStatus.TRIAGE_APPROVED
             approved.append(finding)
@@ -119,6 +130,15 @@ def verify_candidates(candidate_path: Path, verified_path: Path) -> tuple[list[F
             for f in approved
         ],
         "rejected": rejected,
+        "suppressed": {
+            "count": sum(suppressed_reasons.values()),
+            "reason_counts": suppressed_reasons,
+            "note": "Suppressed items are reconnaissance context, not reportable findings.",
+        },
     }
     verified_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    return approved, f"Verifier approved {len(approved)} and rejected {len(rejected)} candidates."
+    suppressed_count = sum(suppressed_reasons.values())
+    return approved, (
+        f"Verifier approved {len(approved)}, rejected {len(rejected)}, "
+        f"and suppressed {suppressed_count} non-reportable candidates."
+    )
