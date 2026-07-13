@@ -1,10 +1,14 @@
 import json
+from pathlib import Path
 
 from shared.types import Finding, FindingStatus
 from workflow.contracts import validate_attack_surfaces, verify_candidates
 from workflow.hooks.triage import validate
 from workflow.pipeline import PIPELINE
 from workflow.tasks import get_tasks_for_phase
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_pipeline_has_four_connected_phases():
@@ -195,3 +199,24 @@ def test_documentation_path_requires_successful_sensitive_bypass(tmp_path):
     candidates.write_text(json.dumps({"candidates": [base]}), encoding="utf-8")
     approved, _ = verify_candidates(candidates, verified)
     assert len(approved) == 1
+
+
+def test_opencode_entrypoints_contain_the_lead_to_impact_gate():
+    root_skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    command = (ROOT / "commands" / "mastermind-bug-bounty.md").read_text(encoding="utf-8")
+
+    assert "Mandatory Lead-to-Impact Gate" in root_skill
+    assert "Never stop at" in root_skill
+    assert "Swagger exposure: roughly `0.7`" not in root_skill
+    assert "Non-Negotiable Lead Gate" in command
+    assert "禁止在正文、摘要、附录" in command
+    assert "skill(mastermind-workflow)" not in command
+
+
+def test_loaded_resources_do_not_promote_path_visibility_to_a_finding():
+    fingerprint = (ROOT / "references" / "fingerprint-mapping.md").read_text(encoding="utf-8")
+    druid = (ROOT / "references" / "cve-chains.md").read_text(encoding="utf-8")
+
+    assert "the entire API surface is exposed" not in fingerprint
+    assert "任意请求返回 Druid 页面/JSON → 未授权" not in druid
+    assert "普通页面、登录页、空监控页" in druid

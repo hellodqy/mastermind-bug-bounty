@@ -5,7 +5,7 @@
 
 ---
 
-## 1. Swagger Detection (CRITICAL SHORTCUT)
+## 1. Swagger Detection (Lead Discovery)
 
 Test these paths first:
 ```
@@ -18,10 +18,7 @@ Test these paths first:
 /openapi.json
 ```
 
-**If ANY returns 200 with Swagger UI / JSON** → the entire API surface is exposed.
-- Skip Phase 1 JS extraction entirely
-- Skip Phase 1 endpoint discovery entirely
-- Jump to: enumerate all endpoints → test unauthenticated access → search sensitive keywords → parameter injection per decision tree
+**If any path returns Swagger UI / JSON**, treat it only as an endpoint-enumeration lead. Do not score or report documentation visibility. Continue JS extraction because runtime calls, hidden parameters, and authentication behavior may differ from the document. Test selected high-value endpoints and report only a concrete unauthorized sensitive result or operation.
 
 **Sensitive endpoint keywords to search in Swagger**:
 `admin`, `internal`, `export`, `download`, `delete`, `manage`, `config`, `backup`, `sys`, `secret`, `cron`, `execute`, `run`, `shell`, `upload`, `import`
@@ -231,7 +228,7 @@ Framework recognized?
 ├── YES → Load cve-chains.md for CVE exploitation steps
 │   ├── Has known default password? → Test first (highest success rate)
 │   ├── Has known RCE vulnerability in current version? → Exploit via BP MCP
-│   └── Has Swagger/Druid/Nacos exposed? → Enumerate → find hidden endpoints
+│   └── Has Swagger/Druid/Nacos visible? → Treat as lead → enumerate → verify concrete impact
 └── NO → Return to the autonomous attack queue and standard decision tree
 ```
 
@@ -239,8 +236,8 @@ Framework recognized?
 
 ```
 1. Default password: admin/admin123 or ry/admin123 → full system access
-2. Druid monitor: /druid/index.html → default ruoyi/123456 → SQL monitoring
-3. Swagger: /swagger-ui.html → full API enumeration → unauthenticated endpoints
+2. Druid monitor: /druid/index.html → test authorized default-credential/bypass hypotheses → require sensitive SQL/session/config evidence
+3. Swagger: /swagger-ui.html → enumerate APIs → require an unauthorized sensitive endpoint result
 4. Shiro key: fCq+/xW488hMTCD+cmJ3aQ== → Shiro-550 RCE via JRMP
 5. Scheduled tasks: /monitor/job → SnakeYaml RCE (<= 4.6.2)
 6. SQL injection: /system/dept/list → extract data (v4.2-v4.5)

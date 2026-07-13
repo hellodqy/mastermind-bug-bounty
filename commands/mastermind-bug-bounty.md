@@ -12,9 +12,7 @@ description: >
 请加载并遵循当前安装的 Skill 指令：
 
 1. 主 Skill: `skill(mastermind-bug-bounty)`
-2. 工作流 Skill: `skill(mastermind-workflow)`
-
-所有执行以 `SKILL.md` 和 `workflow/SKILL.md` 中的四阶段定义为准，不在本命令中重复维护旧版流水线。
+工作流细节从主 Skill 的相对资源按需加载；不要依赖另一个顶层 `mastermind-workflow` Skill 是否被 OpenCode 单独发现。
 
 ## Execution Contract
 
@@ -22,6 +20,14 @@ description: >
 - Phase 1 | 攻击面分析：只分析，不动手；输出 `confidence`、`impact`、`exploitability`、`priority_score`。
 - Phase 2 | 自主攻击：按优先级测试；`confidence < 0.4` 换方向，`0.4 <= confidence < 0.8` 补证，`confidence >= 0.8` 验证利用。
 - Phase 3 | 报告生成：只报告 Verifier 确认过的漏洞。
+
+## Non-Negotiable Lead Gate
+
+- 硬编码 API Token/API Key 只是线索。必须继续定位所属 API、Header/参数和可调用接口，并验证是否能读取敏感数据或执行敏感操作。
+- 少量内网 IP/域名、Swagger/OpenAPI、Druid 路径只是线索。必须在授权范围内尝试与上下文匹配的路径前缀、方法、Header、认证、路由和反向代理绕过。
+- 无法转化为敏感数据、敏感操作、权限提升或其他可验证安全影响时，静默丢弃。
+- 禁止给失败线索定级；禁止在正文、摘要、附录、“其他发现”或收尾说明中展示。
+- 最终输出前逐条反问：证据证明的是实际影响，还是只证明字符串/路径存在？后者必须删除。
 
 ## Knowledge Loading
 

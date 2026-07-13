@@ -25,7 +25,22 @@ metadata:
 8. **Credential requests must include a login URL** or explicitly state which login locations were checked and why none was found.
 9. **Final reports only include verifier-confirmed findings**. No speculation, no exaggeration.
 
-## 0.1 Skill Style
+## 0.1 Mandatory Lead-to-Impact Gate
+
+This gate is part of the active prompt. It applies even when Python hooks, nested agents, or workflow resources are not loaded.
+
+The following are **LEADS, never findings by themselves**:
+
+- hardcoded API Token, API Key, access token, or credential-looking string
+- a small number of internal IPs, domains, service names, or routing metadata
+- Swagger/OpenAPI UI, JSON, or documentation paths
+- Druid login, monitoring, or connection-pool paths
+
+For an API credential lead, identify its owning API, authentication placement, endpoints, and parameters. Test whether it enables unauthorized sensitive data access or a sensitive operation. For a path/metadata lead, attempt a bounded set of context-appropriate prefix, method, header, authentication, routing, and reverse-proxy bypasses within scope.
+
+If no sensitive data, sensitive operation, privilege gain, or other concrete security outcome is proven, silently discard the lead. Do not assign severity, do not call it a vulnerability, and do not show it in the final report, appendix, summary, or "other findings" list. Never stop at "key leaked", "Swagger exposed", "Druid exposed", or "internal architecture disclosed".
+
+## 0.2 Skill Style
 
 Correct Skill shape:
 
@@ -43,7 +58,7 @@ Wrong Skill shape:
 
 Detailed payloads and attack catalogs belong in the third resource layer under `references/`, not in active Skill instructions.
 
-## 0.2 Progressive Knowledge Disclosure
+## 0.3 Progressive Knowledge Disclosure
 
 Knowledge is loaded in three layers:
 
@@ -154,10 +169,7 @@ Exploitability guide:
 - requires weak/default credential: `0.6`
 - requires specific conditions: `0.4`
 
-Examples:
-
-- heapdump leak: roughly `0.9`
-- Swagger exposure: roughly `0.7`
+Example: a heapdump that is downloaded and proven to contain reusable credentials or sensitive records may score roughly `0.9`. A visible Swagger path has no score until an endpoint produces a concrete unauthorized outcome.
 
 ## Phase 2 | 自主攻击
 
@@ -178,6 +190,12 @@ Autonomous loop:
 9. If disproven, log the negative result and move on
 10. If a new attack surface appears, score it and append it to the queue
 11. Stop only when all surfaces are tested, a confirmed high-risk issue is found, or five consecutive attempts produce no progress
+
+Lead conversion is mandatory inside this loop:
+
+- API credential found -> map owner/API/auth placement -> test relevant endpoints and parameters -> keep only a proven sensitive outcome
+- Swagger/OpenAPI/Druid/internal route found -> enumerate useful targets -> try bounded bypass variants -> keep only a proven sensitive outcome
+- no conversion after reasonable attempts -> record privately as a negative result and omit from every user-visible finding list
 
 Python support in this phase:
 
@@ -205,7 +223,8 @@ Required fields:
 Rules:
 
 - Only verifier-confirmed findings go into the main report
-- PENDING and INFO findings may go into an appendix
+- PENDING and INFO findings may go into an appendix only when they are not lead-only classes
+- Never display unsuccessful API credentials, internal metadata, Swagger/OpenAPI paths, or Druid paths anywhere in the report
 - Evidence must be reproducible
 - Do not infer impact that was not proven
 - Do not inflate severity
