@@ -35,10 +35,18 @@ The following are **LEADS, never findings by themselves**:
 - a small number of internal IPs, domains, service names, or routing metadata
 - Swagger/OpenAPI UI, JSON, or documentation paths
 - Druid login, monitoring, or connection-pool paths
+- microservice domains, gateway/service names, PageSpy/VConsole, sourcemaps, URL token transport, or authenticated utility/decryption endpoints
 
 For an API credential lead, identify its owning API, authentication placement, endpoints, and parameters. Test whether it enables unauthorized sensitive data access or a sensitive operation. For a path/metadata lead, attempt a bounded set of context-appropriate prefix, method, header, authentication, routing, and reverse-proxy bypasses within scope.
 
-If no sensitive data, sensitive operation, privilege gain, or other concrete security outcome is proven, silently discard the lead. Do not assign severity, do not call it a vulnerability, and do not show it in the final report, appendix, summary, or "other findings" list. Never stop at "key leaked", "Swagger exposed", "Druid exposed", or "internal architecture disclosed".
+Default to rejection. A reportable candidate must prove a crossed authorization/user/privilege boundary and one reproducible outcome: unauthorized sensitive data, unauthorized sensitive action, account takeover, privilege escalation, code execution, financial loss, meaningful cross-user impact, or service compromise. If this proof is absent, silently discard the lead. Do not assign severity, call it a vulnerability, or show it in the final report, appendix, summary, or "other findings" list.
+
+Specific thresholds:
+
+- PageSpy/VConsole or sourcemap: visibility alone is zero impact; require extracted sensitive data/credentials that produce a concrete unauthorized outcome.
+- Token in URL: require proof that an unauthorized third party receives the token, the token is replayable, and replay reaches sensitive data/action.
+- Authenticated decrypt/utility endpoint: expected authenticated functionality is not a vulnerability; require authorization bypass and sensitive impact.
+- A blocked or identifiable Swagger/Actuator/Druid path (`401`, `403`, `404`, `501`, login page, empty UI) is not a finding.
 
 ## 0.2 Skill Style
 
@@ -223,7 +231,7 @@ Required fields:
 Rules:
 
 - Only verifier-confirmed findings go into the main report
-- PENDING and INFO findings may go into an appendix only when they are not lead-only classes
+- Do not show PENDING, INFO, lead-only, suppressed, or negative-result items in the report or appendix
 - Never display unsuccessful API credentials, internal metadata, Swagger/OpenAPI paths, or Druid paths anywhere in the report
 - Evidence must be reproducible
 - Do not infer impact that was not proven

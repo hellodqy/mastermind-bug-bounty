@@ -11,6 +11,16 @@ from workflow.tasks import get_tasks_for_phase
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def src_eligibility(outcome_type="unauthorized_sensitive_data"):
+    return {
+        "boundary_crossed": True,
+        "reproducible": True,
+        "outcome_type": outcome_type,
+        "affected_asset": "authorized test target",
+        "evidence": "A redacted request/response pair proves the concrete outcome.",
+    }
+
+
 def test_pipeline_has_four_connected_phases():
     names = [phase.name for phase in PIPELINE]
     assert names == [
@@ -54,7 +64,12 @@ def test_triage_requires_impact_and_reproduction():
         impact="Cross-account access exposes private order records.",
         poc_steps=["Login as test user A.", "Request test user B's order ID."],
     )
-    assert validate(finding, confidence_threshold=0.8).approved
+    assert not validate(finding, confidence_threshold=0.8).approved
+    assert validate(
+        finding,
+        confidence_threshold=0.8,
+        enforce_reportability=False,
+    ).approved
 
     finding.poc_steps = []
     assert not validate(finding, confidence_threshold=0.8).approved
@@ -72,6 +87,7 @@ def test_verifier_writes_only_approved_findings(tmp_path):
             "evidence": "A second authorized test account received another user's order.",
             "impact": "Cross-account access exposes private order records.",
             "poc_steps": ["Login as test user A.", "Request test user B's order ID."],
+            "src_eligibility": src_eligibility(),
         },
         {
             "vuln_class": "swagger exposure",
@@ -154,6 +170,7 @@ def test_api_credential_requires_proven_sensitive_use(tmp_path):
         "evidence": "A hardcoded API token was found and tested against the owning API.",
         "impact": "The credential permits access to private customer support records.",
         "poc_steps": ["Use the redacted token in the API header.", "Request one authorized proof record."],
+        "src_eligibility": src_eligibility(),
     }
     candidates.write_text(json.dumps({"candidates": [base]}), encoding="utf-8")
     approved, _ = verify_candidates(candidates, verified)
@@ -183,6 +200,7 @@ def test_documentation_path_requires_successful_sensitive_bypass(tmp_path):
         "evidence": "The Swagger path exists but initially returns an authorization response.",
         "impact": "A bypass exposed private administrative endpoint definitions and test data.",
         "poc_steps": ["Request the documented path.", "Apply the verified routing bypass."],
+        "src_eligibility": src_eligibility(),
     }
     candidates.write_text(json.dumps({"candidates": [base]}), encoding="utf-8")
     approved, _ = verify_candidates(candidates, verified)
@@ -206,7 +224,8 @@ def test_opencode_entrypoints_contain_the_lead_to_impact_gate():
     command = (ROOT / "commands" / "mastermind-bug-bounty.md").read_text(encoding="utf-8")
 
     assert "Mandatory Lead-to-Impact Gate" in root_skill
-    assert "Never stop at" in root_skill
+    assert "Default to rejection" in root_skill
+    assert "PageSpy/VConsole or sourcemap" in root_skill
     assert "Swagger exposure: roughly `0.7`" not in root_skill
     assert "Non-Negotiable Lead Gate" in command
     assert "禁止在正文、摘要、附录" in command
@@ -220,3 +239,37 @@ def test_loaded_resources_do_not_promote_path_visibility_to_a_finding():
     assert "the entire API surface is exposed" not in fingerprint
     assert "任意请求返回 Druid 页面/JSON → 未授权" not in druid
     assert "普通页面、登录页、空监控页" in druid
+
+
+def test_common_non_src_observations_are_suppressed(tmp_path):
+    candidates = tmp_path / "candidates.json"
+    verified = tmp_path / "verified.json"
+    observations = [
+        ("微服务架构信息泄露", "前端 JS 暴露 13 个后端微服务域名"),
+        ("PageSpy/VConsole 暴露", "预发布环境加载远程调试工具"),
+        ("网关信息泄露", "404 错误包含内部服务名 css-oms-order-svc"),
+        ("Sourcemap 可下载", "app.126ab986.js.map 可公开下载"),
+        ("Token URL 传输", "下载接口使用 ?token= 传递凭证"),
+        ("内网 IP 泄露", "域名解析到 10.128.25.187"),
+        ("解密 API 暴露", "POST /api/common/security/decrypt 需要正常认证"),
+        ("敏感路径暴露", "Swagger/Actuator 返回 501 但路径可识别"),
+    ]
+    payload = {"candidates": [
+        {
+            "vuln_class": vuln_class,
+            "target_url": "https://example.test/lead",
+            "severity": "high",
+            "confidence": 1.0,
+            "evidence": detail,
+            "impact": "This reveals implementation detail but proves no unauthorized outcome.",
+            "poc_steps": ["Request the resource.", "Observe the implementation detail."],
+        }
+        for vuln_class, detail in observations
+    ]}
+    candidates.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    approved, _ = verify_candidates(candidates, verified)
+    result = json.loads(verified.read_text(encoding="utf-8"))
+    assert approved == []
+    assert result["approved"] == []
+    assert result["suppressed"]["count"] == len(observations)
