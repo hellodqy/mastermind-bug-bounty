@@ -8,7 +8,7 @@ description: >
 metadata:
   tags: "bug-bounty,pentest,security,autonomous,src"
   category: "offensive-security"
-  version: "4.0.0"
+  version: "4.3.0"
 ---
 
 # Mastermind Bug Bounty — Four-Phase Autonomous Workflow

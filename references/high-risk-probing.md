@@ -1,7 +1,7 @@
 # 高危探测参考（按需加载）
 
 > 第三层资源。仅当自主攻击阶段选择了高风险验证方向时按需加载。
-> WARNING: 这些操作会触发 WAF 规则。仅在 Phase 0-3 安全测试完成且确认目标价值后执行。
+> WARNING: 这些操作会触发 WAF 规则。仅在 Phase 0 已完成、Phase 1 已明确优先级且 Phase 2 已确认目标价值后执行。
 
 ---
 
@@ -10,7 +10,7 @@
 ```
 高风险验证执行模式（非"首次403=整体停止"）:
   每个项目独立测试 → WAF 拦截=记入 blocked 清单 → 继续测下一项
-  → blocked 清单写入 findings/_interim-phase3.8-blocked.md
+  → blocked 清单写入 findings/_phase2_blocked.md
   → 全部测完后再统一决定是否对 blocked 项做 WAF 绕过
 ```
 
@@ -48,7 +48,7 @@ SAFE MODE，1 次探测:
 ## Step 3 — SQL Injection（手工单点，不批量）
 
 ```
-→ 仅在 Phase 3 中已识别为 "可能的数据库输入" 的参数上测试
+→ 仅在 Phase 2 已识别为“可能的数据库输入”的参数上测试
 → 测试: id=3-1 (数字型), keyword=test' (字符型), SLEEP(2)
 → 403=记入 blocked: "SQLi WAF blocked on param={param_name}"
 → 异常响应=记录发现
@@ -108,7 +108,7 @@ SAFE MODE，1 次探测:
 ## 高风险验证后处理
 
 ```
-全部项目测试完成 → blocked 清单写入 findings/_interim-phase3.8-blocked.md:
+全部项目测试完成 → blocked 清单写入 findings/_phase2_blocked.md:
 
 blocked 清单非空:
   → 目标价值 HIGH → LAST RESORT: 对 blocked 项统一尝试 WAF 绕过

@@ -99,7 +99,7 @@ Only productive when algorithm is HS256/HS384/HS512 (symmetric/HMAC).
 1. **jwt.secrets.list** (本地已有, 103,979 条): `E:\SRC\SRCai批量挖掘\jwt.secrets.list` — 直接读取, 无需下载
 2. **Common defaults**: `secret`, `secret1`, `secretkey`, `password`, `changeme`, `key`
 3. **JS-extracted keywords dictionary** (HIGH ROI — custom per target):
-   - From Phase 1 JS analysis, collect ALL extracted sensitive values:
+   - From Phase 0 JS analysis, collect all extracted sensitive values:
      - AES keys, `secretKey`, `privateKey`, `key:`, `secret:` values
      - Any hardcoded string assigned to `jwtSecret`, `tokenSecret`, `signKey`, `JWT_KEY`
      - App name, company name, domain name, product code
@@ -115,7 +115,7 @@ Only productive when algorithm is HS256/HS384/HS512 (symmetric/HMAC).
 - JeecgBoot: check default `jeecg-boot` secret
 - Spring Boot apps: check `application.properties` for `jwt.secret=`
 
-**In SRC context**: If source leak (Phase 5) reveals JWT secret → direct forgery, no brute force needed.
+**In SRC context**: If Phase 0 source-leak research reveals a JWT secret, prioritize controlled forgery validation over brute force.
 
 ---
 

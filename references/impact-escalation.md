@@ -1,6 +1,6 @@
 # Impact Escalation: 5 Dimensions
 
-> Loaded at Phase 6. Purpose: Maximize demonstrated impact without increasing test destructiveness.
+> Loaded during Phase 2 after a mechanism is verified. Purpose: maximize demonstrated impact without increasing test destructiveness.
 > Rule: Prove with minimal data, describe the maximum possible consequence.
 
 ---

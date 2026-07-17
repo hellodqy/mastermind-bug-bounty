@@ -279,7 +279,7 @@ GET each path → 如果返回 HTML（不是 404/redirect/403）→ 是独立 SP
 对每个发现的 SPA:
   1. 提取其 JS bundles（不同的构建，不同的 API 表面）
   2. 提取其 router routes（可能暴露仅管理员的端点）
-  3. 作为独立攻击面处理 — 运行完整 Phase 1-3
+  3. 作为独立攻击面进入 Phase 1 排序，并在 Phase 2 验证；只有确认结果才进入 Phase 3
 ```
 
 *End of fingerprint-mapping.md*

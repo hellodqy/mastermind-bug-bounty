@@ -92,10 +92,13 @@ def load_hunt(hunt_dir: str | Path) -> HuntState | None:
     """Load an existing hunt state from disk."""
     base = _ensure_hunt_dir(hunt_dir)
     sp = _state_path(base)
-    if not sp.exists():
-        return None
-
-    raw = read_json(sp)
+    raw = read_json(sp) if sp.exists() else {}
+    if not raw:
+        try:
+            from workflow.persistence import SQLiteStateStore
+            raw = SQLiteStateStore(base).load_latest_snapshot() or {}
+        except Exception:
+            raw = {}
     if not raw:
         return None
     return _deserialize_state(raw)
@@ -223,7 +226,14 @@ def _deserialize_state(raw: dict) -> HuntState:
 
 
 def _persist_state(hunt_dir: Path, state: HuntState) -> bool:
-    return write_json(_state_path(hunt_dir), _serialize_state(state))
+    payload = _serialize_state(state)
+    json_ok = write_json(_state_path(hunt_dir), payload)
+    try:
+        from workflow.persistence import SQLiteStateStore
+        SQLiteStateStore(hunt_dir).save_snapshot(state.hunt_id, payload)
+    except Exception:
+        return json_ok
+    return json_ok
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +258,13 @@ def log_event(hunt_dir: str | Path, entry_type: str,
         "entry_type": entry.entry_type,
         "data": entry.data,
     })
+    try:
+        from workflow.persistence import SQLiteStateStore
+        state = load_hunt(base)
+        hunt_id = state.hunt_id if state else ""
+        SQLiteStateStore(base).record_event(hunt_id, entry_type, agent_id, entry.data)
+    except Exception:
+        pass
     return entry
 
 

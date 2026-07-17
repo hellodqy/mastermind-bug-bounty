@@ -1,0 +1,21 @@
+name: Release version check
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Check VERSION, SKILL metadata, and release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
+        run: python scripts/sync_version.py --check --tag "$RELEASE_TAG"

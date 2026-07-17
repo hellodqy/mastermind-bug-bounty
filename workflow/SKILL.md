@@ -6,7 +6,7 @@ description: >
   and autonomous direction changes.
 metadata:
   tags: "bug-bounty,workflow,autonomous-security,four-phase"
-  version: "4.0.0"
+  version: "4.3.0"
 ---
 
 # Mastermind Workflow — Four-Phase Orchestrator

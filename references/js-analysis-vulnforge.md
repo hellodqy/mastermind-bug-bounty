@@ -1,11 +1,11 @@
 # JS Analysis & Source Leak: Process Flow
 
-> Loaded at Phase 1 (endpoint discovery) and Phase 0 (concurrent source leak search).
+> Loaded during Phase 0 for endpoint discovery and concurrent source-leak research.
 > Core logic: JS files contain the app's entire API surface + secrets. Source leaks contain configs + keys + full source for audit.
 
 ---
 
-## Part A: JS Endpoint Extraction (Phase 1)
+## Part A: JS Endpoint Extraction (Phase 0)
 
 ### Step 1: Collect All JS Files
 
@@ -286,7 +286,7 @@ Fallback:  github_search_code: "{company_domain}"  /  "{company_name}"  by keywo
 **Step 2.5c: MANDATORY Data Linkage Testing** (DO NOT stop at "info leak")
 
 ```
-Any identifier extracted from repos → immediately queue for Phase 3 interface testing:
+Any identifier extracted from repositories becomes a Phase 2 attack-surface input:
 
   Branch 1: Email → login + password-reset endpoints
     → Obtain JWT/Session Token → test horizontal/vertical privilege escalation
@@ -373,7 +373,7 @@ XMLHttpRequest.prototype.open = function(method, url) {
 };
 ```
 
-**When**: Always inject at Phase 1 start. Captures every API call, including those triggered by user interaction or SPA route navigation.
+**When**: Inject during Phase 0 runtime inspection. It captures API calls triggered by user interaction or SPA route navigation.
 
 ### Hook Pattern 2: Intercept CryptoJS (AES/DES)
 
@@ -476,7 +476,7 @@ Array.prototype.push = function(...items) {
 }
 ```
 
-**When**: Phase 0/1, Vue detected. Maps full SPA route tree, revealing hidden pages + their API calls.
+**When**: During Phase 0 when Vue is detected. Map the SPA route tree and its API calls.
 
 ### Hook Pattern 9: Fixed Timing Values (Anti-Debug Bypass)
 

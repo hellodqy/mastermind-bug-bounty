@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from workflow.tasks import Task, TaskStep, get_tasks_for_phase, count_all_steps
+from workflow.tools import ToolContext, default_registry
 
 
 @dataclass
@@ -65,6 +66,8 @@ class TaskExecutor:
         self.domain = target_url.split("://")[-1].split("/")[0].split(":")[0]
         self.state: dict = {}
         self.results: list[TaskResult] = []
+        self.tool_context = ToolContext(hunt_dir=self.hunt_dir, target_url=self.target_url)
+        self.tool_registry = default_registry()
 
     def run_phase(self, phase_name: str) -> PhaseResult:
         tasks = get_tasks_for_phase(phase_name)
@@ -119,6 +122,9 @@ class TaskExecutor:
         )
 
     def _run_step(self, task: Task, step: TaskStep) -> StepResult:
+        if step.adapter:
+            return self._run_adapter_step(task, step)
+
         # Replace placeholders
         instruction = step.instruction.replace("{target}", self.target_url)
         instruction = instruction.replace("{domain}", self.domain)
@@ -155,6 +161,50 @@ class TaskExecutor:
                                   output=f"Output file not found (non-critical): {output_path}")
 
         return StepResult(step=step.step, tool=step.tool, status="ok")
+
+    def _run_adapter_step(self, task: Task, step: TaskStep) -> StepResult:
+        total = len(task.steps)
+        crit = " [CRITICAL]" if step.critical else ""
+        print(f"\n  {'-'*55}")
+        print(f"  STEP {step.step}/{total} | ADAPTER: {step.adapter}{crit}")
+        print(f"  ACTION: {step.action}")
+        print(f"  {'-'*55}")
+        print(f"  {step.instruction}")
+
+        try:
+            result = self.tool_registry.execute(step.adapter, self.tool_context, step.params)
+        except Exception as exc:
+            return StepResult(
+                step=step.step,
+                tool=step.adapter,
+                status="failed",
+                output=f"Adapter error: {exc}",
+            )
+
+        for path in result.outputs:
+            print(f"  >> Output: {path}")
+        if result.summary:
+            print(f"  >> {result.summary}")
+
+        if result.success:
+            if step.output_file:
+                output_path = self._resolve_output_path(step.output_file)
+                if output_path.exists():
+                    return StepResult(step=step.step, tool=step.adapter,
+                                      status="ok", output=str(output_path))
+                if step.critical:
+                    return StepResult(step=step.step, tool=step.adapter,
+                                      status="failed",
+                                      output=f"Adapter did not produce: {output_path}")
+            return StepResult(step=step.step, tool=step.adapter,
+                              status=result.status, output=result.summary)
+
+        return StepResult(
+            step=step.step,
+            tool=step.adapter,
+            status="failed" if step.critical else "skipped",
+            output=result.summary or result.status,
+        )
 
     def _resolve_output_path(self, output_file: str) -> Path:
         """Resolve an output file path relative to hunt_dir."""

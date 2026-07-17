@@ -934,7 +934,7 @@ OSS/Bucket detected?
 │   ├── Path traversal in URL? → Modify path while keeping signature → access other files
 │   └── Remove signature entirely → test no-auth access
 │
-└── STEP 4: AK/SK Escalation (if keys found in Phase 1/5)
+└── STEP 4: AK/SK Escalation (if keys were found during Phase 0)
     ├── Identify cloud provider from key format (see table below)
     ├── Validate keys → test list-buckets / get-caller-identity
     ├── Storage access → list/download/upload bucket files
@@ -1284,7 +1284,7 @@ GraphQL:       查询参数/筛选字段 → 删除where条件/扩大limit
 - 若IDOR端点带筛选条件(ownerId/categoryId) → §1 IDOR
 - 若接口本身无认证就返回全量 → §8 未授权访问
 - JWT爆破/伪造 → `references/jwt-analysis.md` Step 2-3
-- 源码泄露 → 数据联动链路 → SKILL.md Phase 0 Source Leak Search
+- 源码泄露 → 数据联动链路 → Phase 0 source-leak research
 
 ### SRC合规
 ```
@@ -1528,7 +1528,7 @@ Safe-first: prioritize low-impact validation first; load high-risk probing guida
 │   ├── 立即提取响应中的 total/count/size/summary 判断数据量级
 │   ├── 对 export 接口 → 导出文件确认数据泄露量
 │   ├── 对响应做敏感字段扫描（password/token/key/secret 等）
-│   └── 触发 Phase 3.5: 用管理端点发现的敏感数据回溯其他 Phase
+│   └── 继续 Phase 2 循环：用管理端点发现的敏感数据生成新攻击面
 │
 └── 步骤4: 如果 GET 全部返回 403
     ├── 尝试移除 Content-Type header
@@ -1583,8 +1583,8 @@ curl -sk -H "{TOKEN_HEADER}: ${TOKEN}" -X {METHOD} \
 ```
 
 ### 关联漏洞
-- 响应敏感内容自动扫描 → Phase 2 Step 0.5
-- ACK 自动注入 → Phase 3 Rule 3
+- 响应敏感内容自动扫描 → Phase 2 响应挖掘
+- ACK 自动注入 → Phase 2 值联动规则
 - 导出接口检测 → discovery-amplification.md Rule 6
 
 ---

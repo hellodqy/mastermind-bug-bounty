@@ -193,19 +193,19 @@ Step 4: 权限维持 (如有IAM/RAM权限)
 ## 7. 集成到标准工作流
 
 ```
-Phase 1 Recon:
+Phase 0 Asset Recon:
   □ JS 文件 grep: "oss" "s3" "cos" "bucket" "aliyuncs" "amazonaws" "qiniu"
   □ 所有静态资源 URL 收集,识别云存储域名
   □ 雪瞳提取: cloud_keys 字段自动捕获 AK/SK
 
-Phase 1 Source Leak:
+Phase 0 Source-Leak Research:
   □ GitHub/Gitee search: "LTAI" OR "AKIA" OR "AKID" + 公司域名
 
-Phase 2 API Fuzz:
+Phase 2 Autonomous Validation:
   □ 检查上传接口响应是否返回 AK/SK 或预签名 URL
   □ 检查配置接口是否返回云存储配置
 
-Phase 4 Exploit:
+Phase 2 Impact Escalation:
   □ 获得 AK/SK → 参考 §5 利用链
   □ 发现 NoSuchBucket → 参考 §3 域名接管
 ```

@@ -35,7 +35,7 @@ Search for in downloaded JS:
   signRequest / verifyResponse
 ```
 
-**From source leak** (if Phase 5 found code):
+**From Phase 0 source-leak research**:
 ```
 Search for in backend source:
   Cipher.getInstance("AES/CBC/PKCS5Padding")

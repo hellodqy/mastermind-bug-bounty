@@ -1,6 +1,6 @@
 # Response Chaining: The Highest-ROI Bug Bounty Technique
 
-> Activated at Phase 3-6. After EVERY API response, extract fields and inject them into subsequent requests.
+> Activated on demand during Phase 2. After every relevant API response, extract fields and consider them as inputs for subsequent hypotheses.
 > Most IDOR/priv-esc findings come from chaining, not from blind single-request testing.
 
 ---
