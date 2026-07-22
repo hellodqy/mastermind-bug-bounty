@@ -47,6 +47,8 @@ Specific thresholds:
 - Token in URL: require proof that an unauthorized third party receives the token, the token is replayable, and replay reaches sensitive data/action.
 - Authenticated decrypt/utility endpoint: expected authenticated functionality is not a vulnerability; require authorization bypass and sensitive impact.
 - A blocked or identifiable Swagger/Actuator/Druid path (`401`, `403`, `404`, `501`, login page, empty UI) is not a finding.
+- Security header gaps, version/framework fingerprints, Self-XSS, TLS warnings, standalone open redirects, missing rate limits, raw error pages, standalone account enumeration, unproven brute-force risk, AccessKeyId without secret, hardcoded encryption keys without server-side bypass, and unreproducible observations are not findings.
+- If a low-value signal enables a real chain, report the final chain impact (IDOR, injection, RCE, data theft, takeover, etc.), not the intermediate signal.
 
 ## 0.2 Skill Style
 

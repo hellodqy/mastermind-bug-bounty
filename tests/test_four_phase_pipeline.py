@@ -273,3 +273,64 @@ def test_common_non_src_observations_are_suppressed(tmp_path):
     assert approved == []
     assert result["approved"] == []
     assert result["suppressed"]["count"] == len(observations)
+
+
+def test_expanded_garbage_findings_are_suppressed(tmp_path):
+    candidates = tmp_path / "candidates.json"
+    verified = tmp_path / "verified.json"
+    observations = [
+        ("Missing HTTP security headers", "X-Frame-Options, CSP and HSTS are absent."),
+        ("Version disclosure", "The response exposes nginx version and X-Powered-By framework fingerprint."),
+        ("Self-XSS", "The payload only executes in the attacker's own console session."),
+        ("TLS warning", "The server supports a weak cipher suite but no downgrade attack is proven."),
+        ("Standalone open redirect", "The redirect stays within owned subdomains and no chain is proven."),
+        ("Missing rate limiting", "The login endpoint has no rate limit but no password was cracked."),
+        ("Stack trace disclosure", "The error page exposes SQL error, Java class name and package path."),
+        ("Origin IP disclosure", "The source IP is visible but WAF bypass and unauthorized access are not proven."),
+        ("Account enumeration", "Login errors differ for existing and non-existing accounts."),
+        ("Can be brute forced", "The report claims brute force is possible but no password was obtained."),
+        ("AccessKeyId leak", "Only AccessKeyId is present; no AccessKeySecret exists."),
+        ("Hardcoded encryption key", "The client encryption key is hardcoded but the server does not require it."),
+        ("No reproducible PoC", "The observation cannot reproduce on a clean session."),
+    ]
+    payload = {"candidates": [
+        {
+            "vuln_class": vuln_class,
+            "target_url": "https://example.test/lead",
+            "severity": "high",
+            "confidence": 1.0,
+            "evidence": detail,
+            "impact": "This is a low-value signal and does not prove unauthorized impact.",
+            "poc_steps": ["Observe the signal.", "No exploitable outcome is reproduced."],
+            "src_eligibility": src_eligibility(),
+        }
+        for vuln_class, detail in observations
+    ]}
+    candidates.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    approved, _ = verify_candidates(candidates, verified)
+    result = json.loads(verified.read_text(encoding="utf-8"))
+    assert approved == []
+    assert result["approved"] == []
+    assert result["suppressed"]["count"] == len(observations)
+
+
+def test_low_value_chain_context_reports_only_final_impact(tmp_path):
+    candidates = tmp_path / "candidates.json"
+    verified = tmp_path / "verified.json"
+    candidate = {
+        "vuln_class": "Account takeover via verified password spraying chain",
+        "final_vuln_class": "account takeover",
+        "target_url": "https://example.test/login",
+        "severity": "high",
+        "confidence": 0.9,
+        "evidence": "A redacted login attempt proves one authorized test account was taken over.",
+        "impact": "The chain crosses the user boundary and produces account takeover on a test account.",
+        "poc_steps": ["Use the verified credential pair.", "Open the account profile as the victim user."],
+        "src_eligibility": src_eligibility("account_takeover"),
+    }
+    candidates.write_text(json.dumps({"candidates": [candidate]}, ensure_ascii=False), encoding="utf-8")
+
+    approved, _ = verify_candidates(candidates, verified)
+    assert len(approved) == 1
+    assert approved[0].vuln_class == candidate["vuln_class"]
