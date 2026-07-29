@@ -358,16 +358,16 @@ Vue 服务端渲染使用与客户端相同的模板语法，如果用户输入�
 
 ```bash
 # 方法1: 从 vendor/app chunk 中提取 webpackChunkName 注释
-grep -oP 'webpackChunkName:\s*"([^"]+)"' downloaded/{target}/js/*.js | sort -u
+grep -oP 'webpackChunkName:\s*"([^"]+)"' output/{target}/assets/js/*.js | sort -u
 
 # 方法2: 提取所有路径定义 (Vue Router route paths)
-grep -oP 'path:\s*"([^"]{2,})"' downloaded/{target}/js/*.js | sort -u
+grep -oP 'path:\s*"([^"]{2,})"' output/{target}/assets/js/*.js | sort -u
 
 # 方法3: 提取懒加载 import 路径
-grep -oP "import\s*\(\s*['\"]([^'\"]+)['\"]\s*\)" downloaded/{target}/js/*.js
+grep -oP "import\s*\(\s*['\"]([^'\"]+)['\"]\s*\)" output/{target}/assets/js/*.js
 
 # 方法4: Vite/Rollup 产物中的动态 import
-grep -oP "import\(['\"]([^'\"]+)['\"]\)" downloaded/{target}/js/*.js
+grep -oP "import\(['\"]([^'\"]+)['\"]\)" output/{target}/assets/js/*.js
 ```
 
 **高价值 chunk 特征**:

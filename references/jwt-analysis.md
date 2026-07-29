@@ -104,8 +104,8 @@ Only productive when algorithm is HS256/HS384/HS512 (symmetric/HMAC).
      - Any hardcoded string assigned to `jwtSecret`, `tokenSecret`, `signKey`, `JWT_KEY`
      - App name, company name, domain name, product code
      - Unique-looking strings in config objects (especially `*.yml` / `*.properties` leaks)
-   - Build custom wordlist: `echo "$JS_KEYWORDS" > downloaded/{target_domain}/wordlists/target_jwt_dict.txt`
-   - Run: `hashcat -a 0 -m 16500 jwt.txt downloaded/{target_domain}/wordlists/target_jwt_dict.txt`
+   - Build custom wordlist: `echo "$JS_KEYWORDS" > output/{target_domain}/runtime/wordlists/target_jwt_dict.txt`
+   - Run: `hashcat -a 0 -m 16500 jwt.txt output/{target_domain}/runtime/wordlists/target_jwt_dict.txt`
    - **Why this works**: Developers often reuse the same secret across JWT and other crypto contexts. The AES key in a JS file may also be the JWT signing secret.
 4. rockyou.txt: `/usr/share/wordlists/rockyou.txt.gz` (gunzip first)
 5. Target-specific: company name, product name, framework defaults

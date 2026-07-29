@@ -10,7 +10,7 @@
 ```
 高风险验证执行模式（非"首次403=整体停止"）:
   每个项目独立测试 → WAF 拦截=记入 blocked 清单 → 继续测下一项
-  → blocked 清单写入 findings/_phase2_blocked.md
+  → blocked 清单写入 evidence/_phase2_blocked.md
   → 全部测完后再统一决定是否对 blocked 项做 WAF 绕过
 ```
 
@@ -108,7 +108,7 @@ SAFE MODE，1 次探测:
 ## 高风险验证后处理
 
 ```
-全部项目测试完成 → blocked 清单写入 findings/_phase2_blocked.md:
+全部项目测试完成 → blocked 清单写入 evidence/_phase2_blocked.md:
 
 blocked 清单非空:
   → 目标价值 HIGH → LAST RESORT: 对 blocked 项统一尝试 WAF 绕过

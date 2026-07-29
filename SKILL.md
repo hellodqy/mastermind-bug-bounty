@@ -8,7 +8,7 @@ description: >
 metadata:
   tags: "bug-bounty,pentest,security,autonomous,src"
   category: "offensive-security"
-  version: "4.3.0"
+  version: "4.3.1"
 ---
 
 # Mastermind Bug Bounty — Four-Phase Autonomous Workflow
@@ -114,7 +114,12 @@ Python deterministic responsibilities:
 - Extract API endpoints, methods, parameters, content types, auth hints, and login routes from JS
 - Probe Swagger/OpenAPI exposure
 - Run common path dictionaries
-- Emit structured outputs under `output/{target_domain}/`
+- Emit all artifacts under `output/{target_domain}/`, classified as `recon/`,
+  `assets/`, `analysis/`, `evidence/`, `reports/`, or `runtime/`
+
+Read [references/artifact-layout.md](references/artifact-layout.md) before
+writing any process or result file. The normalized hostname is the only target
+directory key; URL paths and query strings never create directories.
 
 AI interpretation responsibilities:
 

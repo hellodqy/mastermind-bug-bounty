@@ -584,31 +584,11 @@ def check_pair_completeness(pairs: list[UnconsumedPair],
 def load_linkage_state(hunt_dir: str | Path) -> tuple[EndpointRegistry, ValuePool]:
     """Load both endpoint registry and value pool from hunt directory.
 
-    Looks for:
-        findings/_endpoint_params.json
-        findings/_leaked_values.json
-
-    Falls back to:
-        downloaded/{domain}/_endpoint_params.json
-        downloaded/{domain}/_leaked_values.json
+    The caller passes a normalized ``output/{domain}`` root.
     """
     base = Path(hunt_dir)
-
-    # Try findings/ first, then downloaded/
-    ep_paths = [
-        base / "findings" / "_endpoint_params.json",
-    ]
-    vp_paths = [
-        base / "findings" / "_leaked_values.json",
-    ]
-
-    # Also check downloaded/ subdirectories
-    downloaded = base / "downloaded"
-    if downloaded.is_dir():
-        for domain_dir in downloaded.iterdir():
-            if domain_dir.is_dir():
-                ep_paths.append(domain_dir / "_endpoint_params.json")
-                vp_paths.append(domain_dir / "_leaked_values.json")
+    ep_paths = [base / "analysis" / "_endpoint_params.json"]
+    vp_paths = [base / "evidence" / "_leaked_values.json"]
 
     registry = EndpointRegistry()
     for p in ep_paths:
@@ -629,9 +609,9 @@ def save_linkage_state(hunt_dir: str | Path,
                        pool: ValuePool) -> bool:
     """Save the value pool (with consumption state) to disk."""
     base = Path(hunt_dir)
-    findings_dir = base / "findings"
-    findings_dir.mkdir(parents=True, exist_ok=True)
-    return pool.to_file(findings_dir / "_leaked_values.json")
+    evidence_dir = base / "evidence"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    return pool.to_file(evidence_dir / "_leaked_values.json")
 
 
 # ---------------------------------------------------------------------------

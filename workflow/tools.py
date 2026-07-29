@@ -15,6 +15,7 @@ from typing import Any, Protocol
 from urllib.parse import urlparse
 
 from shared.utils import now_iso, read_json, read_text, sha256_short, write_json
+from workflow.artifacts import ArtifactLayout
 
 
 @dataclass(frozen=True)
@@ -24,24 +25,27 @@ class ToolContext:
 
     @property
     def domain(self) -> str:
-        parsed = urlparse(self.target_url)
-        host = parsed.netloc or self.target_url.split("/")[0]
-        return host.split(":")[0]
+        return self.layout.domain
 
     @property
     def target_key(self) -> str:
-        return self.target_url.split("://")[-1].rstrip("/")
+        return self.layout.domain
 
     @property
     def output_dir(self) -> Path:
-        return self.hunt_dir / "output" / self.target_key
+        return self.layout.root
 
     @property
     def findings_dir(self) -> Path:
-        return self.output_dir / "findings"
+        """Compatibility alias for callers that treat evidence as findings."""
+        return self.layout.evidence
+
+    @property
+    def layout(self) -> ArtifactLayout:
+        return ArtifactLayout(self.hunt_dir, self.target_url)
 
     def artifact(self, relative: str) -> Path:
-        return self.output_dir / relative
+        return self.layout.resolve(relative)
 
 
 @dataclass
@@ -74,6 +78,7 @@ class ToolRegistry:
 
     def execute(self, name: str, context: ToolContext,
                 params: dict[str, Any] | None = None) -> ToolResult:
+        context.layout.ensure()
         return self.get(name).execute(context, params or {})
 
 
@@ -81,9 +86,8 @@ class AggregateEndpointAnalysis:
     name = "aggregate_endpoint_analysis"
 
     def execute(self, context: ToolContext, params: dict[str, Any] | None = None) -> ToolResult:
-        findings = context.findings_dir
-        js_files = list((context.output_dir / "js").glob("*.js"))
-        analysis_files = sorted(findings.glob("_analysis_*.json"))
+        js_files = list(context.layout.js.glob("*.js"))
+        analysis_files = sorted(context.layout.analysis.glob("_analysis_*.json"))
 
         endpoints: dict[str, dict[str, Any]] = {}
         secrets: list[dict[str, Any]] = []
@@ -143,8 +147,8 @@ class AggregateEndpointAnalysis:
             "endpoints": endpoints,
         }
 
-        ep_path = findings / "_endpoint_params.json"
-        login_path = findings / "_login_links.json"
+        ep_path = context.layout.analysis / "_endpoint_params.json"
+        login_path = context.layout.analysis / "_login_links.json"
         write_json(ep_path, output)
         write_json(login_path, {"login_links": login_links})
         return ToolResult(
@@ -160,7 +164,7 @@ class DetermineBaseURL:
     name = "determine_base_url"
 
     def execute(self, context: ToolContext, params: dict[str, Any] | None = None) -> ToolResult:
-        endpoints = read_json(context.findings_dir / "_endpoint_params.json")
+        endpoints = read_json(context.layout.analysis / "_endpoint_params.json")
         base = endpoints.get("_meta", {}).get("base_url", "")
         if not base:
             for url in endpoints.get("endpoints", {}):
@@ -169,7 +173,7 @@ class DetermineBaseURL:
                     base = f"{parsed.scheme}://{parsed.netloc}"
                     break
         base = base or context.target_url
-        path = context.findings_dir / "_base_url.txt"
+        path = context.layout.analysis / "_base_url.txt"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(base, encoding="utf-8")
         return ToolResult(True, "ok", f"Base URL set to {base}", [str(path)], {"base_url": base})
@@ -187,8 +191,8 @@ class BuildProbePlan:
     ]
 
     def execute(self, context: ToolContext, params: dict[str, Any] | None = None) -> ToolResult:
-        base = read_text(context.findings_dir / "_base_url.txt").strip() or context.target_url
-        endpoint_doc = read_json(context.findings_dir / "_endpoint_params.json")
+        base = read_text(context.layout.analysis / "_base_url.txt").strip() or context.target_url
+        endpoint_doc = read_json(context.layout.analysis / "_endpoint_params.json")
         probes: list[dict[str, Any]] = []
         for url, info in endpoint_doc.get("endpoints", {}).items():
             endpoint = _normalize_endpoint(url)
@@ -209,7 +213,7 @@ class BuildProbePlan:
                 "url": base.rstrip("/") + endpoint,
                 "query": {"uid": "test"},
             })
-        path = context.findings_dir / "_probe_plan.json"
+        path = context.layout.analysis / "_probe_plan.json"
         write_json(path, {"probes": probes, "generated_at": now_iso()})
         return ToolResult(True, "ok", f"Built {len(probes)} probe definitions.", [str(path)])
 
@@ -225,7 +229,7 @@ class MineProbeResults:
     )
 
     def execute(self, context: ToolContext, params: dict[str, Any] | None = None) -> ToolResult:
-        results = _load_probe_results(context.findings_dir)
+        results = _load_probe_results(context.layout.evidence)
         pool: dict[str, dict[str, list[dict[str, Any]]]] = {}
         for result in results:
             if int(result.get("status", 0) or 0) < 200 or int(result.get("status", 0) or 0) >= 300:
@@ -246,7 +250,7 @@ class MineProbeResults:
                         "consumed_endpoints": [],
                         "unconsumed_endpoints": [],
                     })
-        path = context.findings_dir / "_leaked_values.json"
+        path = context.layout.evidence / "_leaked_values.json"
         write_json(path, pool)
         return ToolResult(True, "ok", f"Mined {sum(len(v['values']) for v in pool.values())} values.", [str(path)])
 
@@ -258,8 +262,8 @@ class BuildLinkageQueue:
         from shared.linkage import EndpointRegistry, PairingEngine, ValuePool
         from workflow.persistence import SQLiteStateStore
 
-        ep_path = context.findings_dir / "_endpoint_params.json"
-        pool_path = context.findings_dir / "_leaked_values.json"
+        ep_path = context.layout.analysis / "_endpoint_params.json"
+        pool_path = context.layout.evidence / "_leaked_values.json"
         if not ep_path.exists() or not pool_path.exists():
             return ToolResult(False, "failed", "Missing endpoint params or value pool.")
 
@@ -291,7 +295,7 @@ class BuildLinkageQueue:
                 enqueued += 1
             pairs_json.append(payload | {"idempotency_key": key, "queue_state": job.state})
 
-        path = context.findings_dir / "_linkage_pairs.json"
+        path = context.layout.analysis / "_linkage_pairs.json"
         write_json(path, pairs_json)
         return ToolResult(True, "ok", f"Prepared {len(pairs)} linkage pairs; {enqueued} queued.", [str(path)])
 
@@ -300,9 +304,9 @@ class AggregateCandidates:
     name = "aggregate_candidates"
 
     def execute(self, context: ToolContext, params: dict[str, Any] | None = None) -> ToolResult:
-        findings = context.findings_dir
-        results = _load_probe_results(findings)
-        linkage = read_json(findings / "_linkage_results.json")
+        evidence = context.layout.evidence
+        results = _load_probe_results(evidence)
+        linkage = read_json(evidence / "_linkage_results.json")
         if isinstance(linkage, dict):
             linkage_rows = linkage.get("results", [])
         else:
@@ -337,7 +341,7 @@ class AggregateCandidates:
                     "src_eligibility": {"boundary_crossed": False, "reproducible": False},
                 })
 
-        path = findings / "_candidate_findings.json"
+        path = evidence / "_candidate_findings.json"
         write_json(path, {"candidates": candidates, "generated_at": now_iso()})
         return ToolResult(True, "ok", f"Aggregated {len(candidates)} candidate signals.", [str(path)])
 
@@ -351,11 +355,10 @@ class CheckPairCompleteness:
             PairingEngine,
             ValuePool,
             check_pair_completeness,
-            save_linkage_state,
         )
 
-        ep_path = context.findings_dir / "_endpoint_params.json"
-        pool_path = context.findings_dir / "_leaked_values.json"
+        ep_path = context.layout.analysis / "_endpoint_params.json"
+        pool_path = context.layout.evidence / "_leaked_values.json"
         if not ep_path.exists() or not pool_path.exists():
             return ToolResult(True, "skipped", "Missing endpoint params or value pool; gate skipped.")
 
@@ -364,7 +367,7 @@ class CheckPairCompleteness:
         engine = PairingEngine(registry, pool)
         engine.sync_consumption_state()
         check = check_pair_completeness(engine.match(semantic_expand=True), block_on_critical=True)
-        save_linkage_state(str(context.output_dir), pool)
+        pool.to_file(pool_path)
 
         if check.block_transition:
             rows = [{
@@ -376,7 +379,7 @@ class CheckPairCompleteness:
                 "priority": p.priority,
                 "reason": p.reason,
             } for p in check.unconsumed]
-            path = context.findings_dir / "_unconsumed_pairs.json"
+            path = context.layout.evidence / "_unconsumed_pairs.json"
             write_json(path, rows)
             return ToolResult(False, "failed", check.summary, [str(path)])
         return ToolResult(True, "ok", check.summary)

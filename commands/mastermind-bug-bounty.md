@@ -43,5 +43,6 @@ description: >
 ## Output
 
 - 所有用户可见输出使用中文。
-- 结构化产出放入 `output/$1/`。
+- 结构化产出统一放入 `output/{normalized_domain}/`，并按
+  `recon/assets/analysis/evidence/reports/runtime` 分类；URL 路径、查询参数和端口不参与目录命名。
 - 最终报告只包含可验证证据，不推测、不夸大。

@@ -3,6 +3,7 @@ __pycache__/
 *.pyo
 *.pyd
 hunt-data/
+output/
 *.db
 *.db-shm
 *.db-wal

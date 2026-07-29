@@ -6,12 +6,12 @@ from workflow.tools import ToolContext, default_registry
 def test_endpoint_aggregation_and_base_url(tmp_path: Path):
     target = "https://example.com"
     context = ToolContext(tmp_path, target)
-    findings = context.findings_dir
-    js_dir = context.output_dir / "js"
+    analysis = context.layout.analysis
+    js_dir = context.layout.js
     js_dir.mkdir(parents=True)
-    findings.mkdir(parents=True)
+    analysis.mkdir(parents=True)
     (js_dir / "app.js").write_text("console.log(1)", encoding="utf-8")
-    (findings / "_analysis_app.json").write_text(
+    (analysis / "_analysis_app.json").write_text(
         """
         {
           "analyzed": true,
@@ -38,19 +38,21 @@ def test_endpoint_aggregation_and_base_url(tmp_path: Path):
     registry = default_registry()
     result = registry.execute("aggregate_endpoint_analysis", context)
     assert result.success
-    assert (findings / "_endpoint_params.json").exists()
+    assert (analysis / "_endpoint_params.json").exists()
 
     base = registry.execute("determine_base_url", context)
     assert base.success
-    assert (findings / "_base_url.txt").read_text(encoding="utf-8") == "https://api.example.com"
+    assert (analysis / "_base_url.txt").read_text(encoding="utf-8") == "https://api.example.com"
 
 
 def test_probe_plan_and_candidate_aggregation(tmp_path: Path):
     context = ToolContext(tmp_path, "https://example.com")
-    findings = context.findings_dir
-    findings.mkdir(parents=True)
-    (findings / "_base_url.txt").write_text("https://example.com", encoding="utf-8")
-    (findings / "_endpoint_params.json").write_text(
+    analysis = context.layout.analysis
+    evidence = context.layout.evidence
+    analysis.mkdir(parents=True)
+    evidence.mkdir(parents=True)
+    (analysis / "_base_url.txt").write_text("https://example.com", encoding="utf-8")
+    (analysis / "_endpoint_params.json").write_text(
         '{"endpoints": {"/api/users": {"method": "POST", "content_type": "application/json"}}}',
         encoding="utf-8",
     )
@@ -58,7 +60,7 @@ def test_probe_plan_and_candidate_aggregation(tmp_path: Path):
     plan = registry.execute("build_probe_plan", context)
     assert plan.success
 
-    (findings / "_probe_results.json").write_text(
+    (evidence / "_probe_results.json").write_text(
         '{"results": [{"url": "https://example.com/api/users", "status": 200, "body": "{\\"records\\":[{\\"email\\":\\"a@example.com\\"}]}"}]}',
         encoding="utf-8",
     )
@@ -66,4 +68,4 @@ def test_probe_plan_and_candidate_aggregation(tmp_path: Path):
     assert mined.success
     candidates = registry.execute("aggregate_candidates", context)
     assert candidates.success
-    assert (findings / "_candidate_findings.json").exists()
+    assert (evidence / "_candidate_findings.json").exists()

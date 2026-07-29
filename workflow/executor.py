@@ -17,6 +17,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from workflow.artifacts import ArtifactLayout
 from workflow.tasks import Task, TaskStep, get_tasks_for_phase, count_all_steps
 from workflow.tools import ToolContext, default_registry
 
@@ -63,7 +64,9 @@ class TaskExecutor:
     def __init__(self, hunt_dir: Path, target_url: str):
         self.hunt_dir = hunt_dir
         self.target_url = target_url
-        self.domain = target_url.split("://")[-1].split("/")[0].split(":")[0]
+        self.artifacts = ArtifactLayout(hunt_dir, target_url)
+        self.domain = self.artifacts.domain
+        self.artifacts.ensure()
         self.state: dict = {}
         self.results: list[TaskResult] = []
         self.tool_context = ToolContext(hunt_dir=self.hunt_dir, target_url=self.target_url)
@@ -207,11 +210,8 @@ class TaskExecutor:
         )
 
     def _resolve_output_path(self, output_file: str) -> Path:
-        """Resolve an output file path relative to hunt_dir."""
-        target_path = self.target_url.split("://")[-1].rstrip("/")
-        # output_file may start with findings/..., js/..., scripts/..., reports/...
-        # or use {target} placeholder which was already replaced
-        return self.hunt_dir / "output" / target_path / output_file
+        """Resolve an output file below the current domain artifact root."""
+        return self.artifacts.resolve(output_file)
 
     def _run_phase_gates(self, phase_name: str) -> tuple[list[GateResult], list]:
         """Run phase transition gate checks after a phase completes."""
@@ -230,14 +230,13 @@ class TaskExecutor:
         return gates, verified_findings
 
     def _artifact_path(self, relative: str) -> Path:
-        target_path = self.target_url.split("://")[-1].rstrip("/")
-        return self.hunt_dir / "output" / target_path / relative
+        return self.artifacts.resolve(relative)
 
     def _attack_surface_contract_gate(self) -> GateResult:
         from workflow.contracts import validate_attack_surfaces
 
         passed, summary = validate_attack_surfaces(
-            self._artifact_path("findings/_attack_surfaces.json")
+            self._artifact_path("analysis/_attack_surfaces.json")
         )
         return GateResult(passed, "Attack Surface Contract", summary, not passed)
 
@@ -245,8 +244,8 @@ class TaskExecutor:
         from workflow.contracts import verify_candidates
 
         approved, summary = verify_candidates(
-            self._artifact_path("findings/_validated_candidates.json"),
-            self._artifact_path("findings/_verified_findings.json"),
+            self._artifact_path("evidence/_validated_candidates.json"),
+            self._artifact_path("evidence/_verified_findings.json"),
         )
         blocked = summary.startswith("Missing") or summary.startswith("Invalid")
         return GateResult(not blocked, "Finding Verifier", summary, blocked), approved
@@ -258,8 +257,7 @@ class TaskExecutor:
             from shared.linkage import check_js_analysis_completeness
             from shared.utils import read_json
 
-            target_path = self.target_url.split("://")[-1].rstrip("/")
-            ep_path = self.hunt_dir / "output" / target_path / "findings" / "_endpoint_params.json"
+            ep_path = self.artifacts.analysis / "_endpoint_params.json"
 
             if not ep_path.exists():
                 return GateResult(
@@ -294,13 +292,13 @@ class TaskExecutor:
             sys.path.insert(0, str(self.hunt_dir.parent))
             from shared.linkage import (
                 PairingEngine, EndpointRegistry, ValuePool,
-                check_pair_completeness, load_linkage_state,
+                check_pair_completeness,
             )
 
-            target_path = self.target_url.split("://")[-1].rstrip("/")
-            hunt_output_dir = self.hunt_dir / "output" / target_path
-
-            registry, pool = load_linkage_state(hunt_output_dir)
+            endpoint_path = self.artifacts.analysis / "_endpoint_params.json"
+            pool_path = self.artifacts.evidence / "_leaked_values.json"
+            registry = EndpointRegistry.from_file(str(endpoint_path))
+            pool = ValuePool.from_file(str(pool_path))
 
             if not registry.all_endpoints():
                 return GateResult(
@@ -321,7 +319,7 @@ class TaskExecutor:
             print(f"  {check.summary}")
 
             if check.block_transition:
-                unconsumed_path = hunt_output_dir / "findings" / "_unconsumed_pairs.json"
+                unconsumed_path = self.artifacts.evidence / "_unconsumed_pairs.json"
                 unconsumed_list = []
                 for p in check.unconsumed:
                     unconsumed_list.append({

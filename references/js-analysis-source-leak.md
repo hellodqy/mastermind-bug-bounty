@@ -13,7 +13,7 @@ Step 1: 下载当前页面的所有 JS 文件
 ├── 工具: waybackurls + grep '.js$'
 ├── 浏览器 DevTools → Sources → 全部保存
 ├── playwright/puppeteer → 拦截所有 .js 请求
-└── 目录: downloaded/{domain}/ （按域名组织）
+└── 目录: output/{domain}/assets/js/ （按域名和来源组织）
 
 Step 2: 爬取所有页面，收集增量 JS
 ├── SPA: 点击所有路由/菜单，触发懒加载 JS
@@ -22,7 +22,7 @@ Step 2: 爬取所有页面，收集增量 JS
 
 Step 3: 批量下载
 ├── waybackurls {domain} | grep '\.js$' | sort -u > js_urls.txt
-├── cat js_urls.txt | xargs -I {} curl -s {} -o downloaded/{domain}/{}
+├── cat js_urls.txt | xargs -I {} curl -s {} -o output/{domain}/assets/js/{}
 └── 或: getJS, subjs, xnLinkFinder 等专用工具
 ```
 
@@ -32,17 +32,17 @@ Step 3: 批量下载
 
 ```bash
 # LinkFinder — 最常用的 JS 端点提取工具
-python3 linkfinder.py -i downloaded/{domain}/ -o results.html
+python3 linkfinder.py -i output/{domain}/assets/js/ -o output/{domain}/analysis/linkfinder.html
 
 # xnLinkFinder — 增强版
-python3 xnLinkFinder.py -i downloaded/{domain}/ -o links.txt
+python3 xnLinkFinder.py -i output/{domain}/assets/js/ -o output/{domain}/analysis/links.txt
 
 # jsluice — Go 编写的新工具
-jsluice urls downloaded/{domain}/*.js
+jsluice urls output/{domain}/assets/js/*.js
 
 # 正则 grep 快速提取
-grep -rhoP '["\x27](\/api\/[^"'\''\s]+)["\x27]' downloaded/{domain}/*.js | sort -u
-grep -rhoP '["\x27](\/v\d\/[^"'\''\s]+)["\x27]' downloaded/{domain}/*.js | sort -u
+grep -rhoP '["\x27](\/api\/[^"'\''\s]+)["\x27]' output/{domain}/assets/js/*.js | sort -u
+grep -rhoP '["\x27](\/v\d\/[^"'\''\s]+)["\x27]' output/{domain}/assets/js/*.js | sort -u
 ```
 
 #### 2.2 Manual Pattern Search

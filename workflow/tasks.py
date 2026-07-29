@@ -46,10 +46,10 @@ ASSET_RECON_TASKS = [
             "Navigate, screenshot, and list JS requests",
             (
                 "Open {target}, capture a screenshot, collect network script URLs, "
-                "and save them to js/_js_urls.txt. Record only observations; do not "
+                "and save them to assets/js/_js_urls.txt. Record only observations; do not "
                 "classify vulnerabilities in Phase 0."
             ),
-            "js/_js_urls.txt",
+            "assets/js/_js_urls.txt",
             True,
         )],
     ),
@@ -67,7 +67,7 @@ ASSET_RECON_TASKS = [
                 "subdomain sources available in the environment, keep only authorized "
                 "scope, and write hostname, record type, value, source, and in_scope."
             ),
-            "findings/_external_assets.json",
+            "recon/_external_assets.json",
             True,
         )],
     ),
@@ -81,11 +81,11 @@ ASSET_RECON_TASKS = [
             "http",
             "Download script artifacts",
             (
-                "Read js/_js_urls.txt plus HTML script references, download in-scope "
-                "JavaScript files and referenced sourcemaps, then write a sourcemap "
+                "Read assets/js/_js_urls.txt plus HTML script references, download in-scope "
+                "JavaScript files to assets/js and sourcemaps to assets/sourcemaps, then write a sourcemap "
                 "index. Keep errors in the artifact rather than stopping early."
             ),
-            "findings/_sourcemaps.json",
+            "recon/_sourcemaps.json",
             True,
         )],
     ),
@@ -102,7 +102,7 @@ ASSET_RECON_TASKS = [
                 "Search public code sources for {domain}, secrets, config fragments, "
                 "API hosts, and deployment metadata. Save raw leads only."
             ),
-            "findings/_source_leaks.txt",
+            "recon/_source_leaks.txt",
         ), TaskStep(
             2,
             "http",
@@ -112,7 +112,7 @@ ASSET_RECON_TASKS = [
                 "paths on in-scope HTTP assets. Record URL, status, marker, content "
                 "type, and redirect. A visible or blocked path is a lead, not a finding."
             ),
-            "findings/_exposure_probe.json",
+            "recon/_exposure_probe.json",
             True,
         )],
     ),
@@ -126,13 +126,13 @@ ASSET_RECON_TASKS = [
             "ai/read",
             "Extract endpoint, parameter, auth, secret, and login-link evidence",
             (
-                "Read every relevant JS file under output/{target}/js. Trace API "
+                "Read every relevant JS file under the current domain's assets/js directory. Trace API "
                 "wrappers back to call sites, extract method, content type, auth hints, "
                 "required and optional params, secrets, interceptors, and login links. "
-                "Write one findings/_analysis_<filename>.json per analyzed file. Use "
+                "Write one analysis/_analysis_<filename>.json per analyzed file. Use "
                 "references/INDEX.md only if deeper JS analysis guidance is needed."
             ),
-            "findings/_analysis_summary.md",
+            "analysis/_analysis_summary.md",
             True,
         )],
     ),
@@ -146,7 +146,7 @@ ASSET_RECON_TASKS = [
             "adapter",
             "Build _endpoint_params.json and _login_links.json",
             "Aggregate per-file JS analysis artifacts into the Phase 0 contract.",
-            "findings/_endpoint_params.json",
+            "analysis/_endpoint_params.json",
             True,
             adapter="aggregate_endpoint_analysis",
         )],
@@ -165,13 +165,13 @@ ATTACK_SURFACE_TASKS = [
             "ai",
             "Rank surfaces without active testing",
             (
-                "Read Phase 0 outputs and write findings/_attack_surfaces.json. "
+                "Read Phase 0 outputs and write analysis/_attack_surfaces.json. "
                 "Each surface must include id, surface, hypothesis, evidence, "
                 "confidence, impact, exploitability, priority_score, planned_test, "
                 "chain_links, and stop_or_continue criteria. Sort by priority_score. "
                 "Do not send attack requests in Phase 1."
             ),
-            "findings/_attack_surfaces.json",
+            "analysis/_attack_surfaces.json",
             True,
         )],
     )
@@ -189,7 +189,7 @@ AUTONOMOUS_ATTACK_TASKS = [
             "adapter",
             "Resolve API base URL",
             "Infer a usable base URL from endpoint artifacts or fall back to target.",
-            "findings/_base_url.txt",
+            "analysis/_base_url.txt",
             True,
             adapter="determine_base_url",
         )],
@@ -204,7 +204,7 @@ AUTONOMOUS_ATTACK_TASKS = [
             "adapter",
             "Create deterministic probe definitions",
             "Generate a bounded local probe plan from known endpoints.",
-            "findings/_probe_plan.json",
+            "analysis/_probe_plan.json",
             True,
             adapter="build_probe_plan",
         ), TaskStep(
@@ -212,12 +212,12 @@ AUTONOMOUS_ATTACK_TASKS = [
             "ai/tools",
             "Execute only the probes worth testing by current priority",
             (
-                "Use findings/_attack_surfaces.json and findings/_probe_plan.json as "
+                "Use analysis/_attack_surfaces.json and analysis/_probe_plan.json as "
                 "inputs. Execute tests autonomously according to Phase 2 confidence "
-                "rules, then save findings/_probe_results.json with method, URL, "
+                "rules, then save evidence/_probe_results.json with method, URL, "
                 "status, response marker/body preview, hypothesis id, and decision."
             ),
-            "findings/_probe_results.json",
+            "evidence/_probe_results.json",
             True,
         )],
     ),
@@ -231,7 +231,7 @@ AUTONOMOUS_ATTACK_TASKS = [
             "adapter",
             "Extract reusable values from successful responses",
             "Convert structured probe results into _leaked_values.json.",
-            "findings/_leaked_values.json",
+            "evidence/_leaked_values.json",
             True,
             adapter="mine_probe_results",
         )],
@@ -246,7 +246,7 @@ AUTONOMOUS_ATTACK_TASKS = [
             "adapter",
             "Pair leaked values with compatible endpoints and enqueue jobs",
             "Create _linkage_pairs.json and durable idempotent queue jobs.",
-            "findings/_linkage_pairs.json",
+            "analysis/_linkage_pairs.json",
             True,
             adapter="build_linkage_queue",
         ), TaskStep(
@@ -255,11 +255,11 @@ AUTONOMOUS_ATTACK_TASKS = [
             "Consume queued linkage tests under Phase 2 stop rules",
             (
                 "Lease queued linkage jobs, execute context-appropriate tests, and "
-                "write findings/_linkage_results.json. Mark each tested value/endpoint "
-                "pair as consumed in _leaked_values.json. Add new attack surfaces if "
+                "write evidence/_linkage_results.json. Mark each tested value/endpoint "
+                "pair as consumed in evidence/_leaked_values.json. Add new attack surfaces if "
                 "results reveal a better chain."
             ),
-            "findings/_linkage_results.json",
+            "evidence/_linkage_results.json",
             True,
         )],
     ),
@@ -273,7 +273,7 @@ AUTONOMOUS_ATTACK_TASKS = [
             "adapter",
             "Aggregate candidate signals",
             "Create _candidate_findings.json from probe and linkage artifacts.",
-            "findings/_candidate_findings.json",
+            "evidence/_candidate_findings.json",
             True,
             adapter="aggregate_candidates",
         ), TaskStep(
@@ -282,12 +282,12 @@ AUTONOMOUS_ATTACK_TASKS = [
             "Convert only proven-impact leads into validated candidates",
             (
                 "Read candidates, source leaks, exposure probes, external assets, "
-                "endpoint params, and attack surfaces. Write _validated_candidates.json. "
+                "endpoint params, and attack surfaces. Write evidence/_validated_candidates.json. "
                 "Drop unsuccessful API credentials, internal metadata, Swagger/OpenAPI, "
                 "Druid, CORS, map API keys, sourcemaps, debug tools, and blocked paths "
                 "unless they prove unauthorized sensitive data/action or stronger impact."
             ),
-            "findings/_validated_candidates.json",
+            "evidence/_validated_candidates.json",
             True,
         )],
     ),
@@ -301,7 +301,7 @@ AUTONOMOUS_ATTACK_TASKS = [
             "adapter",
             "Verify high-priority value pairs were consumed",
             "Run the pair-completeness gate before Phase 3.",
-            "findings/_unconsumed_pairs.json",
+            "evidence/_unconsumed_pairs.json",
             False,
             adapter="check_pair_completeness",
         )],
@@ -320,7 +320,7 @@ REPORT_TASKS = [
             "report",
             "Render fixed evidence-based report",
             (
-                "Read findings/_verified_findings.json only. Generate reports/final_report.md "
+                "Read evidence/_verified_findings.json only. Generate reports/final_report.md "
                 "with title, vulnerability type, severity, URL, reproduction steps, evidence, "
                 "and remediation. If none are approved, write a short no-confirmed-findings "
                 "report. Never include leads, suppressed items, negative results, or candidates."

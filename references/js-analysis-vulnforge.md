@@ -13,10 +13,10 @@
 1. Navigate to target → chrome-devtools_navigate_page
 2. Capture network history → chrome-devtools_list_network_requests
 3. Filter: resourceType = "script" → collect ALL JS file URLs
-4. DOWNLOAD JS files to: downloaded/{domain}/js/
+4. DOWNLOAD JS files to: output/{domain}/assets/js/
    - Create directory if not exists
    - Save each JS file with its original filename
-   - Example: downloaded/www.baidu.com/js/app.abc123.js
+   - Example: output/www.baidu.com/assets/js/app.abc123.js
 5. Alternative: analyze JS directly from chrome-devtools network history
    (no download needed — read response body of each JS request)
 6. For SPA apps (Vue/React):
@@ -25,13 +25,15 @@
    - Check waybackurls for historical JS files (may contain removed endpoints)
 ```
 
-**Directory convention**: ALL downloaded content goes to `downloaded/{domain}/`:
+**Directory convention**: ALL target content goes below `output/{domain}/`:
 ```
-downloaded/{domain}/
-├── js/            # All JS files from the target
-├── screens/       # Screenshots of findings
+output/{domain}/
+├── recon/         # Discovery observations
+├── assets/        # JS, sourcemaps, and screenshots
+├── analysis/      # Derived endpoint models and plans
+├── evidence/      # Request/response and verifier evidence
 ├── reports/       # Generated reports
-└── findings/      # Request/response evidence
+└── runtime/       # Scripts, logs, and queue artifacts
 ```
 
 ### Step 2: Extract API Endpoints from JS
