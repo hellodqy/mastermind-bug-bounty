@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - WS/WSS URL、Socket.IO/STOMP hints、tokens、room/channel/user IDs
-- 资源索引：`references/INDEX.md`；候选资源：`decision-trees.md`
+- 资源索引：`references/INDEX.md`；候选资源：`websocket-security-testing.md`；跨协议链路再读 `decision-trees.md`
 
 ## Constraints
 

@@ -1441,3 +1441,16 @@ Payload blocked by WAF?
 ---
 
 *End of WAF & Defense Bypass Techniques Reference*
+
+## Appendix: Parser-Differential WAF Bypasses
+
+Use these only after a concrete application hypothesis has produced a blocked request. The goal is to compare WAF and backend parsing, not to spray bypass syntax.
+
+- **HTTP parameter pollution:** compare first/last/all-value behavior for duplicate scalar, array and object parameters.
+- **Content-Type differential:** send semantically equivalent query, form, JSON and multipart bodies only when the endpoint plausibly accepts them.
+- **Multipart parsing:** vary field duplication, filename metadata and boundary formatting with harmless values; avoid oversized or malformed bodies that threaten availability.
+- **Transfer framing:** chunked or HTTP/2 transformations belong to `http-request-smuggling.md`; do not use them as a generic first probe.
+- **Path normalization:** compare decoding and normalization at CDN, gateway and application layers using an authorized, low-risk path.
+- **CRLF/newline handling:** validate only with self-controlled response headers, logs or test messages.
+
+A WAF response change without backend interpretation and security impact is not reportable.

@@ -1965,3 +1965,11 @@ Endpoint discovered
 ---
 
 *End of Modern Bug Classes Reference*
+
+## Appendix: Prototype-Pollution Gadget Triage
+
+After confirming pollution with a harmless property, search application/framework code for reads that change security behavior. High-value sinks include template engines, sanitizer configuration, authorization defaults, child-process options, path construction and HTTP client options. Framework names alone do not prove a gadget.
+
+For Node.js stacks, inspect whether polluted properties reach `child_process` option objects, Express rendering locals, or template-engine compile options. For browser code, look for sanitizer allowlists, DOM construction and framework-specific script/URL sinks. Test with a benign property or constant output; do not deploy a command-execution gadget merely to prove reachability.
+
+A reportable chain requires: attacker-controlled pollution source, persistence/scope, reachable property read, and concrete authorization/XSS/RCE impact. Global property visibility without a sink remains PENDING.

@@ -113,6 +113,8 @@ Knowledge uses progressive disclosure:
 
 All large knowledge modules belong in `references/` and are reached through `references/INDEX.md`. Do not preload every module into the prompt; load the smallest resource that matches the current Phase 1/2 hypothesis.
 
+Domain Skills cover account takeover, IDOR, injection, SSRF, file upload, business logic, path traversal, deserialization, and XSS. Existing cache, GraphQL, request-smuggling, OAuth/SSO, race-condition, WebSocket, and source-leak Skills route to dedicated references only when those hypotheses are active.
+
 ## Usage
 
 ```bash

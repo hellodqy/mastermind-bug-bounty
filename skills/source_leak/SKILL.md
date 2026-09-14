@@ -1,8 +1,8 @@
 ---
 name: source-leak
 description: >
-  Search public code and metadata for credentials, identifiers, internal
-  routes, and business context that can feed later testing.
+  Search public code and exposed SCM/build artifacts for credentials,
+  identifiers, internal routes, and business context that can feed later testing.
 metadata:
   tags: "source-leak,github,gitee,credentials"
 ---
@@ -11,12 +11,12 @@ metadata:
 
 ## Goal
 
-从公开代码、提交记录、Issue、PR 和缓存中找能回注目标系统的标识符、凭据、内部路径和业务语义。
+从公开代码、提交记录、Issue、PR、缓存以及站点暴露的 SCM/构建产物中找能回注目标系统的标识符、凭据、内部路径和业务语义。
 
 ## Tools / Inputs
 
-- GitHub/Gitee/search engine/cache、domain、company name、emails、repo metadata
-- 资源索引：`references/INDEX.md`；候选资源：`js-analysis-source-leak.md`
+- GitHub/Gitee/search engine/cache、domain、company name、emails、repo metadata、SCM/build artifact paths
+- 资源索引：`references/INDEX.md`；公开代码读 `js-analysis-source-leak.md`，站点 SCM/构建暴露读 `scm-and-artifact-exposure.md`
 
 ## Constraints
 

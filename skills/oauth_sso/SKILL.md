@@ -15,7 +15,7 @@ metadata:
 ## Tools / Inputs
 
 - login URL、authorize URL、redirect_uri、state、code、id_token、callback
-- 资源索引：`references/INDEX.md`；候选资源：`decision-trees.md`
+- 资源索引：`references/INDEX.md`；候选资源：`oauth-oidc-saml-testing.md`；跨漏洞链路再读 `decision-trees.md`
 
 ## Constraints
 

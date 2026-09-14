@@ -626,3 +626,15 @@ FindSomething:  浏览器自动遍历提取 → 一键出结果,适合快速扫�
 ---
 
 *End of js-analysis.md*
+
+## Part D: Client-Side Signature Reconstruction
+
+When an API uses a client-generated signature, reconstruct the data flow rather than treating encryption as a bypass by itself.
+
+1. Set an XHR/fetch breakpoint on the target request and walk upward to the function that assembles headers or body.
+2. Record the canonical input before hashing/encryption: field order, separators, omitted empty values, URL encoding, JSON serialization, timestamp, nonce and any device/client identifier.
+3. Hook the narrow wrapper or the relevant CryptoJS/JSEncrypt operation and compare input/output with the network request.
+4. Reproduce the algorithm outside the browser and test it against at least two captured requests; a single matching value may be hardcoded or coincidental.
+5. Change one business parameter and regenerate the signature. The security question is whether the server grants an unauthorized capability, not whether client code can be read.
+
+Classify constants carefully: public client identifiers and symmetric material shipped to every client are leads. Promote only when signing or decrypting produces unauthorized sensitive data or actions.

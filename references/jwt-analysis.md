@@ -223,3 +223,14 @@ JWT 爆破/伪造成功后:
 ---
 
 *End of jwt-analysis.md*
+
+## Step 7: JWK / JWKS Trust Boundaries
+
+When headers contain `jwk`, `jku`, `x5u`, `kid` or related key-selection metadata, identify which values the verifier trusts and which issuer/audience policy is applied.
+
+- Embedded `jwk`: verify whether arbitrary attacker-provided keys are accepted or restricted to configured issuers.
+- `jku` / `x5u`: verify scheme, host allowlist, redirect handling, DNS resolution and whether fetched keys are bound to the expected issuer.
+- JWKS cache: check whether cache entries are keyed by issuer plus key ID, and how rotation or duplicate `kid` values behave.
+- Claims: key acceptance alone is insufficient; confirm `iss`, `aud`, `azp`, token type and intended endpoint are enforced.
+
+Use a self-controlled test issuer and accounts. Do not redirect production verifiers to third-party infrastructure without explicit scope. A fetched URL, parser error or accepted public key is only a lead until a forged test identity reaches a protected endpoint.

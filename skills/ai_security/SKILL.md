@@ -16,7 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - Chat/RAG/Agent/MCP/tool-call/code-sandbox surfaces
-- 资源索引：`references/INDEX.md`；候选资源：`ai-security-testing.md`、`ai-security-vulnforge.md`
+- 资源索引：`references/INDEX.md`；候选资源：`ai-security-testing.md`、`ai-security-vulnforge.md`；云 IDE/编程台另读 `ai-development-platforms.md`
 
 ## Constraints
 

@@ -8,7 +8,7 @@ description: >
 metadata:
   tags: "bug-bounty,pentest,security,autonomous,src"
   category: "offensive-security"
-  version: "4.3.1"
+  version: "4.4.0"
 ---
 
 # Mastermind Bug Bounty — Four-Phase Autonomous Workflow
@@ -273,5 +273,7 @@ Examples:
 - JS/API hypothesis: load `skills/js_analysis/SKILL.md` or `skills/data_linkage/SKILL.md`; consult `references/INDEX.md` before opening JS/API resource files.
 - API fuzzing hypothesis: load `skills/api_fuzz/SKILL.md`; open API methodology or payload resources only after a specific endpoint/parameter direction is chosen.
 - JWT/crypto hypothesis: load `skills/jwt_attack/SKILL.md` or `skills/crypto_attack/SKILL.md`; open crypto/JWT resources only for the selected token/signature question.
-- Access-control hypothesis: load `skills/auth_bypass/SKILL.md`; open bypass resources only after a concrete 401/403/role-boundary behavior is observed.
+- Object-authorization hypothesis: load `skills/idor_test/SKILL.md`; use `skills/auth_bypass/SKILL.md` only for concrete 401/403/route-boundary behavior.
+- Login/recovery/binding hypothesis: load `skills/account_takeover/SKILL.md`; keep OAuth/OIDC/SAML and JWT details in their specialized Skills.
+- Parser/input hypothesis: choose only the matching injection, SSRF, upload, path, deserialization, XSS, GraphQL, WebSocket, or smuggling Skill instead of preloading their resources together.
 - Reporting: load report resources only in Phase 3, and only for verified findings.
