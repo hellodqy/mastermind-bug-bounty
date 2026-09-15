@@ -8,7 +8,7 @@ description: >
 metadata:
   tags: "bug-bounty,pentest,security,autonomous,src"
   category: "offensive-security"
-  version: "4.5.0"
+  version: "4.6.0"
 ---
 
 # Mastermind Bug Bounty — Four-Phase Autonomous Workflow
@@ -275,6 +275,7 @@ Examples:
 - JWT/crypto hypothesis: load `skills/jwt_attack/SKILL.md` or `skills/crypto_attack/SKILL.md`; open crypto/JWT resources only for the selected token/signature question.
 - Object-authorization hypothesis: load `skills/idor_test/SKILL.md`; use `skills/auth_bypass/SKILL.md` only for concrete 401/403/route-boundary behavior.
 - Login/recovery/binding hypothesis: load `skills/account_takeover/SKILL.md`; keep OAuth/OIDC/SAML and JWT details in their specialized Skills.
+- When an authorized email verification flow needs an isolated disposable test identity, load `skills/mail_code/SKILL.md`; receipt of a code or link is workflow support, not a finding.
 - Parser/input hypothesis: choose only the matching injection, SSRF, upload, path, deserialization, XSS, GraphQL, WebSocket, or smuggling Skill instead of preloading their resources together.
 - Edge-routing hypothesis: load `skills/api_gateway/SKILL.md`; dangling DNS uses `skills/subdomain_takeover/SKILL.md` instead of generic recon.
 - XML/XSLT input uses `skills/xml_parser_security/SKILL.md`; weak comparison, precision, Unicode narrowing, or cross-language coercion uses `skills/type_confusion/SKILL.md`.

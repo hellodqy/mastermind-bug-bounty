@@ -16,6 +16,7 @@ metadata:
 ## Tools / Inputs
 
 - 登录/找回/验证码/MFA/换绑入口、测试账号、会话与票据、OAuth/OIDC 回调
+- 需要隔离测试邮箱时路由到 `skills/mail_code/SKILL.md`，不要在认证 Skill 中预加载接码脚本
 - 资源索引：`references/INDEX.md`；候选资源：`authentication-flow-testing.md`、`oauth-oidc-saml-testing.md`
 
 ## Constraints

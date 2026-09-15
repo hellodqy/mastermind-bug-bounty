@@ -114,7 +114,7 @@ Python 在这里提供工具化支撑：
 
 所有大型知识模块都放在 `references/`，并通过 `references/INDEX.md` 路由。不要把所有模块一次性塞进 prompt；Phase 1/2 形成具体假设后，只加载最相关的一个或少数资源。
 
-专项 Skill 覆盖认证接管、IDOR、注入、SSRF、文件上传、业务逻辑、路径穿越、反序列化、XSS、API Gateway、子域名接管、XML/XSLT 与类型转换；缓存、GraphQL、请求走私、OAuth/SSO、竞态、WebSocket、源码泄露及原型链 gadget 均通过独立 reference 按需加载深入方法。
+专项 Skill 覆盖认证接管、临时测试邮箱接码、IDOR、注入、SSRF、文件上传、业务逻辑、路径穿越、反序列化、XSS、API Gateway、子域名接管、XML/XSLT 与类型转换；缓存、GraphQL、请求走私、OAuth/SSO、竞态、WebSocket、源码泄露及原型链 gadget 均通过独立 reference 按需加载深入方法。
 
 ## 快速使用
 
