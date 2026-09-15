@@ -17,6 +17,7 @@
 | `ai-security-testing.md` | AI/RAG/Agent 安全测试方法。 |
 | `ai-security-vulnforge.md` | AI 攻击面、工具调用滥用、RAG 污染和跨层攻击链。 |
 | `api-fuzz-payloads.md` | API 参数语义对应的 payload 参考库。 |
+| `api-gateway-security.md` | 网关/后端路径、方法、参数、身份传播和版本差分。 |
 | `api-testing-methodology.md` | API 测试方法论和接口行为判断。 |
 | `artifact-layout.md` | 目标域目录、产物分类和文件命名规范。 |
 | `authentication-flow-testing.md` | 登录、找回、验证码、MFA、刷新和账号绑定生命周期。 |
@@ -46,6 +47,7 @@
 | `miniprogram-analysis.md` | 小程序解包、API 提取和 Web 侧反哺。 |
 | `oauth-oidc-saml-testing.md` | OAuth/OIDC/SAML 票据绑定、回调与身份映射。 |
 | `path-traversal-lfi-testing.md` | 路径规范化、任意文件读取与归档目录逃逸。 |
+| `prototype-pollution-gadgets.md` | 原型污染 source、gadget、生命周期与实际 sink 证据链。 |
 | `race-condition-testing.md` | Single-packet、同步方法和业务竞态不变量。 |
 | `rating-standard.md` | 漏洞等级判定参考。 |
 | `report_templates.md` | HackerOne/SRC/CVE 报告模板。 |
@@ -53,8 +55,11 @@
 | `scm-and-artifact-exposure.md` | Git/SVN/构建产物、备份与部署文件暴露。 |
 | `security-testing-methodology.md` | 通用安全测试流程参考。 |
 | `ssrf-testing.md` | 服务端 URL 请求、重定向、云元数据与网络边界。 |
+| `subdomain-takeover-testing.md` | CNAME/NS/MX 悬空绑定、非占用式确认和可信域影响。 |
+| `type-confusion-testing.md` | 弱比较、JSON 类型、精度、Unicode 窄化和跨语言转换。 |
 | `vue-spa-attacks.md` | Vue SPA 路由、store、auth guard 和隐藏 chunk 攻击面。 |
 | `websocket-security-testing.md` | WS 握手、消息级授权、CSWSH、订阅和重放。 |
+| `xml-parser-security.md` | XML/XXE/XInclude/XSLT、复合文档和解析器信任边界。 |
 | `xss-testing.md` | Reflected/Stored/DOM XSS 上下文、sink 与跨用户影响。 |
 
 ## Loading Rule
