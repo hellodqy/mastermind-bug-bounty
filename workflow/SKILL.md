@@ -6,7 +6,7 @@ description: >
   and autonomous direction changes.
 metadata:
   tags: "bug-bounty,workflow,autonomous-security,four-phase"
-  version: "4.6.0"
+  version: "4.7.0"
 ---
 
 # Mastermind Workflow — Four-Phase Orchestrator
@@ -127,17 +127,15 @@ Python 在本阶段只提供确定性支撑：
 
 ## Phase 3 | 报告生成
 
-本阶段不需要 AI 发挥。
+所有报告编写、改写、润色和格式化任务必须先加载并遵循
+`skills/vuln_report_writing/SKILL.md`；侦察和攻击阶段不得预加载。
 
-只报告 Verifier 确认过的漏洞，固定模板如下：
+只报告 Verifier 确认过的漏洞，采用可直接提交的结构：
 
-- 标题
-- 漏洞类型
-- 危害等级
-- URL
-- 复现步骤
-- 证据
-- 修复建议
+- 标题、漏洞摘要、受影响资产
+- 从资产/接口来源开始的复现手册
+- 完整 Burp/raw HTTP 请求与关键响应证据
+- 附件 POC、风险影响评估、修复建议
 
 原则：
 
@@ -145,7 +143,7 @@ Python 在本阶段只提供确定性支撑：
 - 不推测
 - 不夸大
 - 检测信号不等于漏洞
-- PENDING/INFO 只能进附录，不能进正文
+- PENDING/INFO、失败线索和负面结果不得进入正文或附录
 
 ## Hooks
 

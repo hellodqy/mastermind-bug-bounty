@@ -82,17 +82,16 @@ Python support in this phase:
 
 ## Phase 3 | Report Generation
 
-This phase is intentionally rigid. Only verifier-confirmed findings are reported.
+Every request to draft, rewrite, polish, or format a vulnerability report must
+load `skills/vuln_report_writing/SKILL.md`. Only verifier-confirmed findings are
+reported.
 
-Required fields:
+Default submission structure:
 
-- title
-- vulnerability type
-- severity
-- URL
-- reproduction steps
-- evidence
-- remediation
+- title, summary, and affected assets
+- reproduction beginning with the asset or endpoint source
+- complete Burp/raw HTTP request and key response evidence
+- POC attachments, impact assessment, and remediation
 
 Rules:
 

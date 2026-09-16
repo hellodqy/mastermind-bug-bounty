@@ -44,3 +44,21 @@ def test_reference_index_covers_every_top_level_resource():
         if path.name != "INDEX.md" and f"`{path.name}`" not in index
     ]
     assert missing == [], "References missing from INDEX.md: " + ", ".join(missing)
+
+
+def test_all_report_entrypoints_route_through_report_writing_skill():
+    route = "skills/vuln_report_writing/SKILL.md"
+    entrypoints = (
+        ROOT / "SKILL.md",
+        ROOT / "workflow" / "SKILL.md",
+        ROOT / "agents" / "report" / "SKILL.md",
+    )
+    missing = [
+        str(path.relative_to(ROOT))
+        for path in entrypoints
+        if route not in path.read_text(encoding="utf-8")
+    ]
+    assert missing == [], "Report entrypoints missing mandatory routing: " + ", ".join(missing)
+
+    template = SKILLS / "vuln_report_writing" / "templates" / "report_template.md"
+    assert template.is_file()

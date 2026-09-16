@@ -57,6 +57,7 @@
 | `ssrf-testing.md` | 服务端 URL 请求、重定向、云元数据与网络边界。 |
 | `subdomain-takeover-testing.md` | CNAME/NS/MX 悬空绑定、非占用式确认和可信域影响。 |
 | `type-confusion-testing.md` | 弱比较、JSON 类型、精度、Unicode 窄化和跨语言转换。 |
+| `vuln-report-writing.md` | SRC 漏洞报告的黄金攻击链、raw 数据包、图位、影响与文风规范。 |
 | `vue-spa-attacks.md` | Vue SPA 路由、store、auth guard 和隐藏 chunk 攻击面。 |
 | `websocket-security-testing.md` | WS 握手、消息级授权、CSWSH、订阅和重放。 |
 | `xml-parser-security.md` | XML/XXE/XInclude/XSLT、复合文档和解析器信任边界。 |
@@ -68,5 +69,5 @@
 2. Phase 2 只在 AI 已选择具体方向后加载一个或少数相关资源。
 3. 不要把多个大型资源同时塞入上下文；先读最相关章节。
 4. 如果方向改变，停止继续加载旧方向资源。
-5. 报告阶段只加载报告模板、评级标准和合规规则。
+5. 报告阶段必须先加载 `skills/vuln_report_writing/SKILL.md`，再按其要求加载报告写作指南、模板、评级标准和合规规则。
 6. Skill 文件只能指向本索引和候选资源名，不能要求预加载资源全文。
